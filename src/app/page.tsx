@@ -348,7 +348,7 @@ export default function ChatPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center mb-8"
-                      >
+                    >
                       <h2 className="text-4xl font-bold mb-4">
                         Especialistas Criativos
                       </h2>
@@ -381,54 +381,43 @@ export default function ChatPage() {
               <>
                 <ChatHeader agent={selectedAgent} />
 
-                <ScrollArea className="flex-1 overflow-y-scroll">
-                  <div className="p-4 space-y-6">
-                    <AnimatePresence>
-                      {messages.map((message, index) => (
-                        <MessageItem
-                          key={message.id}
-                          message={message}
-                          agent={selectedAgent}
-                          isLast={index === messages.length - 1 && message.role === "assistant"}
-                          onArtifactOpen={handleArtifactOpen}
-                        />
-                      ))}
-                    </AnimatePresence>
-
-                    {isLoading && <TypingIndicator agent={selectedAgent} />}
-
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-
-                <div className="pb-2">
-                  <form 
-                    className="flex mx-auto px-4 bg-background pb-2 gap-2 w-full md:max-w-3xl"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }}
-                  >
-                    <ChatInput
-                      value={input}
-                      onChange={setInput}
-                      onSend={handleSendMessage}
+                <div className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
+                  {messages.map((message, index) => (
+                    <MessageItem
+                      key={message.id}
+                      message={message}
                       agent={selectedAgent}
-                      isLoading={isLoading}
-                      placeholder="Send a message..."
+                      isLast={index === messages.length - 1 && message.role === "assistant"}
+                      onArtifactOpen={handleArtifactOpen}
                     />
-                  </form>
+                  ))}
 
-                  {selectedAgent && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 0.6, y: 0 }}
-                      className="text-[11px] text-muted-foreground text-center pb-2"
-                    >
-                      Conversando com {selectedAgent.name} - Especialista em {selectedAgent.speciality}
-                    </motion.p>
+                  {isLoading && (
+                    <div className="w-full mx-auto max-w-3xl px-4">
+                      <TypingIndicator agent={selectedAgent} />
+                    </div>
                   )}
+
+                  <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]" />
                 </div>
+
+                <form 
+                  className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }}
+                >
+                  <ChatInput
+                    value={input}
+                    onChange={setInput}
+                    onSend={handleSendMessage}
+                    agent={selectedAgent}
+                    isLoading={isLoading}
+                    placeholder="Send a message..."
+                    className="bg-background dark:bg-muted"
+                  />
+                </form>
               </>
             )}
           </AnimatePresence>
