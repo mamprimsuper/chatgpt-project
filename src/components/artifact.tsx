@@ -105,7 +105,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
 
             {/* Coluna do Artefato (direita) */}
             <motion.div
-              className="flex-1 pointer-events-auto bg-zinc-950/95 backdrop-blur-xl border-l border-zinc-800/50 flex flex-col"
+              className="flex-1 pointer-events-auto bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-800 flex flex-col"
               initial={{
                 opacity: 0,
                 x: 100
@@ -128,13 +128,13 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
               }}
             >
               {/* Header do Artefato */}
-              <div className="p-4 flex flex-row justify-between items-start border-b border-zinc-800/50 bg-zinc-900/50">
+              <div className="p-4 flex flex-row justify-between items-start border-b border-zinc-800 bg-zinc-900/80">
                 <div className="flex flex-row gap-4 items-start">
                   <Button
                     onClick={onClose}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -161,7 +161,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={() => setIsEditing(!isEditing)}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                   >
                     {isEditing ? (
                       <Minimize2 className="w-4 h-4" />
@@ -174,7 +174,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={copyToClipboard}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                   >
                     {copied ? (
                       <CheckCircle className="w-4 h-4 text-green-400" />
@@ -187,7 +187,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={downloadArtifact}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -195,7 +195,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto bg-black/50">
+              <div className="flex-1 overflow-y-auto bg-zinc-900/50">
                 {agent && (
                   <div className={`h-1 bg-gradient-to-r ${agent.color} opacity-30`} />
                 )}

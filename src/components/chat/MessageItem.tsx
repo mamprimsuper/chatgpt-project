@@ -2,11 +2,10 @@
 
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, FileText } from "lucide-react";
+import { User } from "lucide-react";
 import { Message, Agent } from "@/types";
-import { ArtifactViewer } from "./ArtifactViewer";
+import { ArtifactPreview } from "./ArtifactPreview";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 
 interface MessageItemProps {
@@ -17,11 +16,8 @@ interface MessageItemProps {
 }
 
 export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageItemProps) {
-  const artifactButtonRef = useRef<HTMLButtonElement>(null);
-
-  const handleArtifactClick = () => {
-    if (message.artifact && artifactButtonRef.current && onArtifactOpen) {
-      const rect = artifactButtonRef.current.getBoundingClientRect();
+  const handleArtifactOpen = (rect: DOMRect) => {
+    if (message.artifact && onArtifactOpen) {
       onArtifactOpen(message.artifact, rect);
     }
   };
@@ -88,30 +84,11 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
             </motion.div>
             
             {message.artifact && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                {message.artifact.type === "text" || message.artifact.type === "document" ? (
-                  <Button
-                    ref={artifactButtonRef}
-                    onClick={handleArtifactClick}
-                    variant="outline"
-                    className={`group relative overflow-hidden bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-all duration-300`}
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-r ${agent?.color || 'from-blue-500 to-purple-600'} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                    <FileText className="w-4 h-4 mr-2" />
-                    <span className="font-medium">{message.artifact.title}</span>
-                    <span className="ml-2 text-xs text-zinc-500">Clique para editar</span>
-                  </Button>
-                ) : (
-                  <ArtifactViewer 
-                    artifact={message.artifact} 
-                    onOpen={() => {}}
-                  />
-                )}
-              </motion.div>
+              <ArtifactPreview
+                artifact={message.artifact}
+                onOpen={handleArtifactOpen}
+                agentColor={agent?.color}
+              />
             )}
           </div>
         )}
