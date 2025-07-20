@@ -331,7 +331,7 @@ export default function ChatPage() {
       {/* Layout principal com duas colunas quando artefato está aberto */}
       <div className={`flex-1 flex ${artifact.isVisible && !isMobile ? 'relative' : ''}`}>
         {/* Área do Chat */}
-        <div className={`flex flex-col relative ${artifact.isVisible && !isMobile ? 'w-[400px] bg-muted dark:bg-background border-r border-border z-20' : 'w-full'} ${artifact.isVisible && isMobile ? 'hidden' : ''}`}>
+        <div className={`flex flex-col min-w-0 h-dvh bg-background ${artifact.isVisible && !isMobile ? 'w-[400px] border-r border-border z-20' : 'w-full'} ${artifact.isVisible && isMobile ? 'hidden' : ''}`}>
           <AnimatePresence mode="wait">
             {appState === "agent-selection" ? (
               /* ETAPA 1: Seleção de Agente */
@@ -378,46 +378,46 @@ export default function ChatPage() {
               </motion.div>
             ) : (
               /* ETAPA 3: Chat Ativo */
-              <motion.div
-                key="chat"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full flex flex-col"
-              >
+              <>
                 <ChatHeader agent={selectedAgent} />
 
-                <div className="flex-1 overflow-hidden flex flex-col">
-                  <ScrollArea className="flex-1">
-                    <div className="p-4 space-y-6">
-                      <AnimatePresence>
-                        {messages.map((message, index) => (
-                          <MessageItem
-                            key={message.id}
-                            message={message}
-                            agent={selectedAgent}
-                            isLast={index === messages.length - 1 && message.role === "assistant"}
-                            onArtifactOpen={handleArtifactOpen}
-                          />
-                        ))}
-                      </AnimatePresence>
+                <ScrollArea className="flex-1 overflow-y-scroll">
+                  <div className="p-4 space-y-6">
+                    <AnimatePresence>
+                      {messages.map((message, index) => (
+                        <MessageItem
+                          key={message.id}
+                          message={message}
+                          agent={selectedAgent}
+                          isLast={index === messages.length - 1 && message.role === "assistant"}
+                          onArtifactOpen={handleArtifactOpen}
+                        />
+                      ))}
+                    </AnimatePresence>
 
-                      {isLoading && <TypingIndicator agent={selectedAgent} />}
+                    {isLoading && <TypingIndicator agent={selectedAgent} />}
 
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
 
+                <form 
+                  className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }}
+                >
                   <ChatInput
                     value={input}
                     onChange={setInput}
                     onSend={handleSendMessage}
                     agent={selectedAgent}
                     isLoading={isLoading}
-                    placeholder={`Conversar com ${selectedAgent?.name}...`}
+                    placeholder="Send a message..."
                   />
-                </div>
-              </motion.div>
+                </form>
+              </>
             )}
           </AnimatePresence>
         </div>
