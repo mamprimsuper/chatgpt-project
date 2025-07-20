@@ -35,7 +35,7 @@ export default function ChatPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Novo sistema de artefatos
+  // Sistema de artefatos
   const { artifact, setArtifact, showArtifact, hideArtifact } = useArtifact();
 
   const scrollToBottom = () => {
@@ -88,38 +88,102 @@ export default function ChatPage() {
   const handleAIResponse = (userMessage: string) => {
     setIsLoading(true);
     
-    setTimeout(() => {
-      // Para demo, sempre gerar artefato para Content Creator
-      if (selectedAgent?.id === "content") {
-        // Selecionar artigo e resposta aleatórios
-        const randomArticle = mockArticles[Math.floor(Math.random() * mockArticles.length)];
-        const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-        
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: randomResponse,
-          role: "assistant",
-          timestamp: new Date(),
-          artifact: {
-            id: Date.now().toString(),
-            type: "text",
-            title: randomArticle.title,
-            content: randomArticle.content
-          }
-        };
-        
-        setMessages(prev => [...prev, aiMessage]);
-        
-        // Automaticamente abrir o artefato após um pequeno delay
-        setTimeout(() => {
-          const artifactElement = document.querySelector(`[data-artifact-id="${aiMessage.artifact?.id}"]`);
-          if (artifactElement && aiMessage.artifact) {
-            const rect = artifactElement.getBoundingClientRect();
-            handleArtifactOpen(aiMessage.artifact, rect);
-          }
-        }, 500);
-      } else {
-        // Resposta padrão para outros agentes
+    // Para demo, sempre gerar artefato para Content Creator
+    if (selectedAgent?.id === "content") {
+      // Selecionar artigo e resposta aleatórios
+      const randomArticle = mockArticles[Math.floor(Math.random() * mockArticles.length)];
+      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+      
+      // Criar mensagem com artefato em estado de streaming
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: randomResponse,
+        role: "assistant",
+        timestamp: new Date(),
+        artifact: {
+          id: Date.now().toString(),
+          type: "text",
+          title: randomArticle.title,
+          content: "" // Começa vazio para simular streaming
+        }
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Simular streaming do conteúdo do artefato
+      const fullContent = randomArticle.content;
+      const words = fullContent.split(' ');
+      let currentContent = '';
+      let wordIndex = 0;
+      
+      // Abrir o artefato imediatamente com animação
+      setTimeout(() => {
+        const artifactElement = document.querySelector(`[data-artifact-id="${aiMessage.artifact?.id}"]`);
+        if (artifactElement && aiMessage.artifact) {
+          const rect = artifactElement.getBoundingClientRect();
+          
+          // Configurar e abrir artefato em modo streaming
+          setArtifact({
+            title: aiMessage.artifact.title || "Documento",
+            documentId: aiMessage.artifact.id,
+            kind: 'text',
+            content: '',
+            isVisible: false,
+            status: 'streaming',
+            boundingBox: {
+              top: rect.top,
+              left: rect.left,
+              width: rect.width,
+              height: rect.height,
+            },
+          });
+          
+          setTimeout(() => {
+            showArtifact(rect);
+          }, 50);
+        }
+      }, 300);
+      
+      // Simular streaming do conteúdo
+      const streamInterval = setInterval(() => {
+        if (wordIndex < words.length) {
+          currentContent += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
+          wordIndex++;
+          
+          // Atualizar mensagem com conteúdo parcial
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessage.id
+              ? {
+                  ...msg,
+                  artifact: {
+                    ...msg.artifact!,
+                    content: currentContent
+                  }
+                }
+              : msg
+          ));
+          
+          // Atualizar artefato aberto
+          setArtifact(prev => ({
+            ...prev,
+            content: currentContent
+          }));
+        } else {
+          // Finalizar streaming
+          clearInterval(streamInterval);
+          setIsLoading(false);
+          
+          // Mudar status para idle
+          setArtifact(prev => ({
+            ...prev,
+            status: 'idle'
+          }));
+        }
+      }, 50); // 50ms entre palavras para efeito suave
+      
+    } else {
+      // Resposta padrão para outros agentes
+      setTimeout(() => {
         const defaultResponse = `## 🤖 **${selectedAgent?.name}** respondendo!\n\n${selectedAgent?.description}\n\nComo posso ajudar você hoje?`;
         
         const aiMessage: Message = {
@@ -130,10 +194,9 @@ export default function ChatPage() {
         };
         
         setMessages(prev => [...prev, aiMessage]);
-      }
-      
-      setIsLoading(false);
-    }, 1500);
+        setIsLoading(false);
+      }, 1500);
+    }
   };
 
   const handleSendMessage = async () => {
