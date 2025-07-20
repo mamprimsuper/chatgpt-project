@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, ArrowUp } from "lucide-react";
 import { Agent } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   value: string;
@@ -22,106 +22,111 @@ export function ChatInput({
   onSend, 
   agent, 
   isLoading = false,
-  placeholder = "Digite sua mensagem..."
+  placeholder = "Send a message..."
 }: ChatInputProps) {
-  const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSend();
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, [value]);
+
+  const adjustHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      if (value.trim() && !isLoading) {
+        onSend();
+      }
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
-    <div className="p-4 border-t border-border bg-background">
-      <div className="max-w-4xl mx-auto">
-        <motion.div 
-          className={`relative transition-all duration-300 ${
-            isFocused ? 'transform scale-[1.02]' : ''
-          }`}
-          whileHover={{ scale: 1.005 }}
-        >
-          <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${
-            agent?.color || 'from-blue-500 to-purple-600'
-          } opacity-0 blur-xl transition-opacity duration-300 ${
-            isFocused ? 'opacity-20' : 'opacity-0'
-          }`} />
-          
-          <div className="relative">
-            <Input
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyPress={handleKeyPress}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={placeholder}
-              className={`pr-24 py-6 text-base rounded-2xl bg-muted border
-                transition-all duration-300 min-h-[60px] resize-none
-                ${isFocused 
-                  ? 'border-primary shadow-lg' 
-                  : 'border-border hover:border-primary/50'
-                }
-              `}
+    <div className="flex flex-col w-full">
+      <form className="flex mx-auto px-4 bg-background pb-2 gap-2 w-full md:max-w-3xl">
+        <div className="relative w-full flex flex-col gap-4">
+          <textarea
+            ref={textareaRef}
+            placeholder={placeholder}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl',
+              '!text-base bg-muted pb-10 dark:border-zinc-700',
+              'w-full px-4 py-4 pr-24',
+              'border border-border',
+              'focus:outline-none focus:ring-1 focus:ring-ring',
+              'placeholder:text-muted-foreground',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+            rows={2}
+            autoFocus
+            disabled={isLoading}
+          />
+
+          <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+            <Button
+              className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+              onClick={(event) => {
+                event.preventDefault();
+                // TODO: Implementar upload de arquivos
+              }}
               disabled={isLoading}
-            />
-            
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 text-muted-foreground hover:text-foreground"
-                  disabled={isLoading}
-                >
-                  <Paperclip className="w-5 h-5" />
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  onClick={onSend}
-                  disabled={!value.trim() || isLoading}
-                  size="icon"
-                  className={`h-10 w-10 transition-all duration-300 ${
-                    value.trim() && !isLoading
-                      ? `bg-gradient-to-r ${agent?.color || 'from-blue-500 to-purple-600'} hover:shadow-lg`
-                      : 'bg-muted cursor-not-allowed text-muted-foreground'
-                  }`}
-                >
-                  {isLoading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Loader2 className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <Send className="w-5 h-5" />
-                  )}
-                </Button>
-              </motion.div>
-            </div>
+              variant="ghost"
+              type="button"
+            >
+              <Paperclip className="w-[14px] h-[14px]" />
+            </Button>
           </div>
-        </motion.div>
-        
-        {agent && (
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 0.6, y: 0 }}
-            className="text-xs text-muted-foreground mt-3 text-center"
-          >
-            Conversando com <span className="font-medium">{agent.name}</span> • 
-            Especialista em <span className="font-medium">{agent.speciality}</span>
-          </motion.p>
-        )}
-      </div>
+
+          <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+            <Button
+              className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+              onClick={(event) => {
+                event.preventDefault();
+                if (value.trim() && !isLoading) {
+                  onSend();
+                }
+              }}
+              disabled={!value.trim() || isLoading}
+              type="submit"
+            >
+              {isLoading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-[14px] h-[14px]" />
+                </motion.div>
+              ) : (
+                <ArrowUp className="w-[14px] h-[14px]" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </form>
+
+      {agent && (
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 0.6, y: 0 }}
+          className="text-[11px] text-muted-foreground text-center pb-3"
+        >
+          Conversando com {agent.name} • Especialista em {agent.speciality}
+        </motion.p>
+      )}
     </div>
   );
 }
