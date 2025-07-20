@@ -34,7 +34,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="p-6 border-t border-zinc-800/50 backdrop-blur-sm bg-black/20">
+    <div className="p-4 border-t border-border bg-background">
       <div className="max-w-4xl mx-auto">
         <motion.div 
           className={`relative transition-all duration-300 ${
@@ -56,13 +56,12 @@ export function ChatInput({
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={placeholder}
-              className={`pr-24 py-6 text-base rounded-2xl bg-zinc-900/90 border-2 backdrop-blur-sm
+              className={`pr-24 py-6 text-base rounded-2xl bg-muted border
                 transition-all duration-300 min-h-[60px] resize-none
                 ${isFocused 
-                  ? 'border-zinc-600 shadow-2xl shadow-black/50' 
-                  : 'border-zinc-700/50 hover:border-zinc-600'
+                  ? 'border-primary shadow-lg' 
+                  : 'border-border hover:border-primary/50'
                 }
-                focus:ring-2 focus:ring-white/10
               `}
               disabled={isLoading}
             />
@@ -75,7 +74,7 @@ export function ChatInput({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 text-zinc-400 hover:text-white hover:bg-zinc-700/50 transition-all duration-200"
+                  className="h-10 w-10 text-muted-foreground hover:text-foreground"
                   disabled={isLoading}
                 >
                   <Paperclip className="w-5 h-5" />
@@ -92,8 +91,8 @@ export function ChatInput({
                   size="icon"
                   className={`h-10 w-10 transition-all duration-300 ${
                     value.trim() && !isLoading
-                      ? `bg-gradient-to-r ${agent?.color || 'from-blue-500 to-purple-600'} hover:shadow-lg hover:shadow-black/25`
-                      : 'bg-zinc-700 cursor-not-allowed'
+                      ? `bg-gradient-to-r ${agent?.color || 'from-blue-500 to-purple-600'} hover:shadow-lg`
+                      : 'bg-muted cursor-not-allowed text-muted-foreground'
                   }`}
                 >
                   {isLoading ? (
@@ -116,10 +115,10 @@ export function ChatInput({
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 0.6, y: 0 }}
-            className="text-xs text-zinc-500 mt-3 text-center"
+            className="text-xs text-muted-foreground mt-3 text-center"
           >
-            Conversando com <span className="font-medium text-zinc-400">{agent.name}</span> • 
-            Especialista em <span className="font-medium text-zinc-400">{agent.speciality}</span>
+            Conversando com <span className="font-medium">{agent.name}</span> • 
+            Especialista em <span className="font-medium">{agent.speciality}</span>
           </motion.p>
         )}
       </div>

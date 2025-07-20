@@ -18,7 +18,7 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
     <motion.header 
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-4 border-b border-zinc-800/50 backdrop-blur-sm bg-black/20"
+      className="flex items-center justify-between p-4 border-b border-border"
     >
       <div className="flex items-center gap-4">
         <motion.div 
@@ -30,14 +30,14 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
           </div>
           <div>
             <motion.h1 
-              className="text-lg font-semibold text-white"
+              className="text-lg font-semibold"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
             >
               {agent.name}
             </motion.h1>
             <motion.p 
-              className="text-xs text-zinc-400"
+              className="text-xs text-muted-foreground"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
@@ -59,7 +59,7 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
             onClick={onShare}
             variant="ghost"
             size="icon"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200"
+            className="text-muted-foreground hover:text-foreground"
           >
             <Share2 className="w-4 h-4" />
           </Button>
@@ -70,7 +70,7 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
             onClick={onSettings}
             variant="ghost"
             size="icon"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200"
+            className="text-muted-foreground hover:text-foreground"
           >
             <MoreHorizontal className="w-4 h-4" />
           </Button>

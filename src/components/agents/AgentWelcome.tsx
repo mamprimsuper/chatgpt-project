@@ -39,7 +39,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
       <motion.header 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-4 border-b border-zinc-800/50 backdrop-blur-sm bg-black/20"
+        className="flex items-center justify-between p-4 border-b border-border"
       >
         <div className="flex items-center gap-4">
           <motion.div
@@ -50,7 +50,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               onClick={onBack}
               variant="ghost"
               size="icon"
-              className="text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+              className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -66,8 +66,8 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               {agent.icon}
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white">{agent.name}</h1>
-              <p className="text-xs text-zinc-400">{agent.speciality}</p>
+              <h1 className="text-lg font-semibold">{agent.name}</h1>
+              <p className="text-xs text-muted-foreground">{agent.speciality}</p>
             </div>
           </motion.div>
         </div>
@@ -96,14 +96,14 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
               <Sparkles className="w-6 h-6 text-yellow-400" />
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              <h2 className="text-4xl font-bold">
                 Em que posso ajudar?
               </h2>
               <Sparkles className="w-6 h-6 text-yellow-400" />
             </motion.div>
             
             <motion.p 
-              className="text-zinc-400 text-lg"
+              className="text-muted-foreground text-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -126,11 +126,10 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               <motion.button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="group p-6 rounded-xl border border-zinc-800/50 hover:border-zinc-600/50 bg-zinc-950/30 hover:bg-zinc-900/50 transition-all duration-300 text-left backdrop-blur-sm relative overflow-hidden"
+                className="group p-6 rounded-xl border border-border hover:border-primary/50 bg-card hover:bg-accent transition-all duration-300 text-left relative overflow-hidden"
                 whileHover={{ 
                   scale: 1.02, 
                   y: -2,
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
                 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -141,12 +140,12 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                 <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
                 
                 <div className="relative z-10">
-                  <p className="text-sm text-zinc-300 group-hover:text-white transition-colors leading-relaxed">
+                  <p className="text-sm group-hover:text-foreground transition-colors leading-relaxed">
                     {suggestion}
                   </p>
                   
                   <motion.div
-                    className="mt-3 flex items-center text-zinc-500 group-hover:text-zinc-300 transition-colors"
+                    className="mt-3 flex items-center text-muted-foreground group-hover:text-foreground transition-colors"
                     initial={{ x: 0 }}
                     whileHover={{ x: 5 }}
                   >
@@ -181,7 +180,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ou digite sua pergunta personalizada..."
-                  className="w-full pr-16 py-6 text-base rounded-2xl bg-zinc-900/80 border-zinc-700/50 focus:border-zinc-600 min-h-[60px] backdrop-blur-sm transition-all duration-300 hover:bg-zinc-900/90 focus:bg-zinc-900"
+                  className="w-full pr-16 py-6 text-base rounded-2xl bg-muted border-border focus:border-primary min-h-[60px] transition-all duration-300"
                 />
                 
                 <motion.div
@@ -195,8 +194,8 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                     size="icon"
                     className={`h-10 w-10 transition-all duration-300 ${
                       input.trim()
-                        ? `bg-gradient-to-r ${agent.color} hover:shadow-lg hover:shadow-black/25`
-                        : 'bg-zinc-700 cursor-not-allowed'
+                        ? `bg-gradient-to-r ${agent.color} hover:shadow-lg`
+                        : 'bg-muted cursor-not-allowed text-muted-foreground'
                     }`}
                   >
                     <Send className="w-5 h-5" />
@@ -213,7 +212,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
             transition={{ delay: 0.8 }}
             className="text-center mt-6"
           >
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               💡 Dica: Seja específico sobre o que você precisa para obter a melhor resposta
             </p>
           </motion.div>

@@ -41,13 +41,10 @@ export function Sidebar({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -256, opacity: 0 }}
           transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          className="w-64 bg-zinc-950/90 backdrop-blur-xl border-r border-zinc-800/50 flex flex-col relative"
+          className="w-64 bg-sidebar-background backdrop-blur-xl border-r border-sidebar-border flex flex-col relative"
         >
-          {/* Subtle glow */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-transparent pointer-events-none" />
-          
           {/* Header */}
-          <div className="relative p-4 border-b border-zinc-800/50">
+          <div className="relative p-4 border-b border-sidebar-border">
             <div className="flex items-center justify-between mb-4">
               <motion.div 
                 className="flex items-center gap-3"
@@ -56,7 +53,7 @@ export function Sidebar({
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg ring-1 ring-white/10">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <h2 className="text-lg font-bold bg-gradient-to-r from-white to-zinc-300 bg-clip-text text-transparent">
+                <h2 className="text-lg font-bold">
                   Creator HUB
                 </h2>
               </motion.div>
@@ -69,7 +66,7 @@ export function Sidebar({
                   onClick={onToggle}
                   variant="ghost"
                   size="icon"
-                  className="text-zinc-400 hover:text-white h-8 w-8 hover:bg-zinc-800/50"
+                  className="text-sidebar-foreground hover:text-sidebar-foreground h-8 w-8"
                 >
                   <PanelLeftClose className="w-4 h-4" />
                 </Button>
@@ -82,7 +79,7 @@ export function Sidebar({
             >
               <Button
                 onClick={onNewChat}
-                className="w-full justify-center gap-3 bg-gradient-to-r from-zinc-800 to-zinc-700 hover:from-zinc-700 hover:to-zinc-600 border-zinc-700/50 h-12 text-base font-medium transition-all duration-300 hover:shadow-lg hover:shadow-black/25"
+                className="w-full justify-center gap-3 h-12 text-base font-medium"
                 variant="secondary"
               >
                 <Plus className="w-5 h-5" />
@@ -94,7 +91,7 @@ export function Sidebar({
           {/* Current Agent */}
           {selectedAgent && (
             <motion.div 
-              className="p-4 border-b border-zinc-800/50 bg-zinc-900/30"
+              className="p-4 border-b border-sidebar-border bg-sidebar-accent"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -103,21 +100,21 @@ export function Sidebar({
                   {selectedAgent.icon}
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-zinc-200">{selectedAgent.name}</div>
-                  <div className="text-xs text-zinc-400">{selectedAgent.speciality}</div>
+                  <div className="text-sm font-medium">{selectedAgent.name}</div>
+                  <div className="text-xs text-muted-foreground">{selectedAgent.speciality}</div>
                 </div>
               </div>
             </motion.div>
           )}
 
           {/* Search */}
-          <div className="p-4 border-b border-zinc-800/50">
+          <div className="p-4 border-b border-sidebar-border">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Buscar conversas..."
-                className="w-full pl-10 pr-3 py-2 bg-zinc-900/50 border border-zinc-800/50 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/10 focus:border-zinc-600 transition-all duration-200"
+                className="w-full pl-10 pr-3 py-2 bg-input border border-border rounded-lg text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
               />
             </div>
           </div>
@@ -127,7 +124,7 @@ export function Sidebar({
             <div className="space-y-1">
               {chats.length > 0 ? (
                 <>
-                  <div className="px-2 py-2 text-xs text-zinc-500 uppercase tracking-wide flex items-center gap-2">
+                  <div className="px-2 py-2 text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                     <Clock className="w-3 h-3" />
                     Últimos 7 dias
                   </div>
@@ -135,8 +132,8 @@ export function Sidebar({
                     <motion.button
                       key={chat.id}
                       onClick={() => onSelectChat(chat.id)}
-                      className={`w-full text-left p-3 rounded-lg hover:bg-zinc-800/50 transition-all duration-200 group ${
-                        currentChatId === chat.id ? 'bg-zinc-800/70 ring-1 ring-white/10' : ''
+                      className={`w-full text-left p-3 rounded-lg hover:bg-sidebar-accent transition-all duration-200 group ${
+                        currentChatId === chat.id ? 'bg-sidebar-accent' : ''
                       }`}
                       whileHover={{ scale: 1.01, x: 2 }}
                       whileTap={{ scale: 0.99 }}
@@ -145,15 +142,15 @@ export function Sidebar({
                       transition={{ delay: index * 0.05 }}
                     >
                       <div className="flex items-start gap-3">
-                        <MessageSquare className="w-4 h-4 text-zinc-400 group-hover:text-zinc-300 mt-0.5 flex-shrink-0" />
+                        <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-foreground mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate text-zinc-200 group-hover:text-white transition-colors">
+                          <div className="text-sm font-medium truncate group-hover:text-foreground transition-colors">
                             {chat.title}
                           </div>
-                          <div className="text-xs text-zinc-500 truncate group-hover:text-zinc-400 transition-colors">
+                          <div className="text-xs text-muted-foreground truncate transition-colors">
                             {chat.lastMessage}
                           </div>
-                          <div className="text-xs text-zinc-600 mt-1">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {chat.timestamp.toLocaleDateString("pt-BR")}
                           </div>
                         </div>
@@ -163,13 +160,13 @@ export function Sidebar({
                 </>
               ) : (
                 <motion.div 
-                  className="px-2 py-8 text-center text-zinc-500 text-sm"
+                  className="px-2 py-8 text-center text-muted-foreground text-sm"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
-                  <MessageSquare className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
+                  <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
                   <p>Seus chats aparecerão aqui</p>
-                  <p className="text-xs text-zinc-600 mt-1">Comece uma conversa!</p>
+                  <p className="text-xs text-muted-foreground mt-1">Comece uma conversa!</p>
                 </motion.div>
               )}
             </div>
@@ -177,11 +174,10 @@ export function Sidebar({
 
           {/* Footer */}
           <motion.div 
-            className="p-4 border-t border-zinc-800/50 bg-zinc-950/50"
-            whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.7)" }}
+            className="p-4 border-t border-sidebar-border"
           >
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-600 flex items-center justify-center ring-1 ring-white/10">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
                 <User className="w-3 h-3" />
               </div>
               <span className="font-medium">Usuário</span>
