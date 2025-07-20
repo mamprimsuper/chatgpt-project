@@ -61,9 +61,10 @@ export default function ChatPage() {
       timestamp: new Date(),
     };
     
-    const userMessages: Message[] = [];
+    const messagesToAdd: Message[] = [];
+    
     if (initialMessage) {
-      userMessages.push({
+      messagesToAdd.push({
         id: "0",
         content: initialMessage,
         role: "user",
@@ -71,7 +72,9 @@ export default function ChatPage() {
       });
     }
     
-    setMessages([...userMessages, welcomeMessage]);
+    messagesToAdd.push(welcomeMessage);
+    
+    setMessages(messagesToAdd);
     setAppState("chat");
     
     if (initialMessage) {
@@ -106,6 +109,15 @@ export default function ChatPage() {
         };
         
         setMessages(prev => [...prev, aiMessage]);
+        
+        // Automaticamente abrir o artefato após um pequeno delay
+        setTimeout(() => {
+          const artifactElement = document.querySelector(`[data-artifact-id="${aiMessage.artifact?.id}"]`);
+          if (artifactElement && aiMessage.artifact) {
+            const rect = artifactElement.getBoundingClientRect();
+            handleArtifactOpen(aiMessage.artifact, rect);
+          }
+        }, 500);
       } else {
         // Resposta padrão para outros agentes
         const defaultResponse = `## 🤖 **${selectedAgent?.name}** respondendo!\n\n${selectedAgent?.description}\n\nComo posso ajudar você hoje?`;
@@ -206,21 +218,27 @@ export default function ChatPage() {
     );
   };
 
+  // Determinar se deve mostrar o layout de chat com artefato
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const shouldHideChat = artifact.isVisible && isMobile;
+
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
       {/* Sidebar */}
-      <Sidebar
-        isVisible={sidebarVisible}
-        selectedAgent={selectedAgent}
-        chats={chats}
-        currentChatId={currentChatId}
-        onToggle={toggleSidebar}
-        onNewChat={handleNewChat}
-        onSelectChat={setCurrentChatId}
-      />
+      {!shouldHideChat && (
+        <Sidebar
+          isVisible={sidebarVisible}
+          selectedAgent={selectedAgent}
+          chats={chats}
+          currentChatId={currentChatId}
+          onToggle={toggleSidebar}
+          onNewChat={handleNewChat}
+          onSelectChat={setCurrentChatId}
+        />
+      )}
 
       {/* Botão para mostrar sidebar quando minimizada */}
-      {!sidebarVisible && (
+      {!sidebarVisible && !shouldHideChat && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -237,104 +255,106 @@ export default function ChatPage() {
         </motion.div>
       )}
 
-      {/* Área Principal */}
-      <div className={`flex-1 flex flex-col relative overflow-hidden transition-all duration-300`}>
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col h-full">
-          <AnimatePresence mode="wait">
-            {appState === "agent-selection" ? (
-              /* ETAPA 1: Seleção de Agente */
-              <motion.div
-                key="agent-selection"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="h-full flex flex-col"
-              >
-                <ScrollArea className="flex-1">
-                  <div className="p-8">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-center mb-8"
-                    >
-                      <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-                        Especialistas Criativos
-                      </h2>
-                      <p className="text-zinc-400 text-lg max-w-lg mx-auto">
-                        Cada agente domina uma área específica da criação. Escolha o especialista ideal para seu projeto.
-                      </p>
-                    </motion.div>
+      {/* Área Principal do Chat */}
+      {!shouldHideChat && (
+        <div className={`flex-1 flex flex-col relative overflow-hidden transition-all duration-300 ${artifact.isVisible && !isMobile ? 'max-w-[400px]' : ''}`}>
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col h-full">
+            <AnimatePresence mode="wait">
+              {appState === "agent-selection" ? (
+                /* ETAPA 1: Seleção de Agente */
+                <motion.div
+                  key="agent-selection"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="h-full flex flex-col"
+                >
+                  <ScrollArea className="flex-1">
+                    <div className="p-8">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center mb-8"
+                      >
+                        <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+                          Especialistas Criativos
+                        </h2>
+                        <p className="text-zinc-400 text-lg max-w-lg mx-auto">
+                          Cada agente domina uma área específica da criação. Escolha o especialista ideal para seu projeto.
+                        </p>
+                      </motion.div>
 
-                    <AgentGrid agents={AGENTS} onSelectAgent={handleSelectAgent} />
-                  </div>
-                </ScrollArea>
-              </motion.div>
-            ) : appState === "agent-welcome" ? (
-              /* ETAPA 2: Tela de Boas-vindas do Agente */
-              <motion.div
-                key="agent-welcome"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full"
-              >
-                <AgentWelcome
-                  agent={selectedAgent!}
-                  onBack={handleBackToAgents}
-                  onStartChat={handleStartChat}
-                />
-              </motion.div>
-            ) : (
-              /* ETAPA 3: Chat Ativo */
-              <motion.div
-                key="chat"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full flex flex-col"
-              >
-                <ChatHeader agent={selectedAgent} />
-
-                <div className="flex-1 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    <div className="max-w-4xl mx-auto p-6 space-y-6">
-                      <AnimatePresence>
-                        {messages.map((message, index) => (
-                          <MessageItem
-                            key={message.id}
-                            message={message}
-                            agent={selectedAgent}
-                            isLast={index === messages.length - 1 && message.role === "assistant"}
-                            onArtifactOpen={handleArtifactOpen}
-                          />
-                        ))}
-                      </AnimatePresence>
-
-                      {isLoading && <TypingIndicator agent={selectedAgent} />}
-
-                      <div ref={messagesEndRef} />
+                      <AgentGrid agents={AGENTS} onSelectAgent={handleSelectAgent} />
                     </div>
                   </ScrollArea>
-                </div>
+                </motion.div>
+              ) : appState === "agent-welcome" ? (
+                /* ETAPA 2: Tela de Boas-vindas do Agente */
+                <motion.div
+                  key="agent-welcome"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="h-full"
+                >
+                  <AgentWelcome
+                    agent={selectedAgent!}
+                    onBack={handleBackToAgents}
+                    onStartChat={handleStartChat}
+                  />
+                </motion.div>
+              ) : (
+                /* ETAPA 3: Chat Ativo */
+                <motion.div
+                  key="chat"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="h-full flex flex-col"
+                >
+                  <ChatHeader agent={selectedAgent} />
 
-                <ChatInput
-                  value={input}
-                  onChange={setInput}
-                  onSend={handleSendMessage}
-                  agent={selectedAgent}
-                  isLoading={isLoading}
-                  placeholder={`Conversar com ${selectedAgent?.name}...`}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <div className="flex-1 overflow-hidden">
+                    <ScrollArea className="h-full">
+                      <div className="max-w-4xl mx-auto p-6 space-y-6">
+                        <AnimatePresence>
+                          {messages.map((message, index) => (
+                            <MessageItem
+                              key={message.id}
+                              message={message}
+                              agent={selectedAgent}
+                              isLast={index === messages.length - 1 && message.role === "assistant"}
+                              onArtifactOpen={handleArtifactOpen}
+                            />
+                          ))}
+                        </AnimatePresence>
+
+                        {isLoading && <TypingIndicator agent={selectedAgent} />}
+
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </ScrollArea>
+                  </div>
+
+                  <ChatInput
+                    value={input}
+                    onChange={setInput}
+                    onSend={handleSendMessage}
+                    agent={selectedAgent}
+                    isLoading={isLoading}
+                    placeholder={`Conversar com ${selectedAgent?.name}...`}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Novo Sistema de Artefatos */}
+      {/* Sistema de Artefatos */}
       <Artifact
         artifact={artifact}
         agent={selectedAgent}

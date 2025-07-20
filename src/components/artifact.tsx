@@ -87,137 +87,170 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
   return (
     <AnimatePresence>
       {artifact.isVisible && (
-        <motion.div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Container principal com layout de duas colunas */}
-          <div className="h-full flex">
-            {/* Coluna do Chat (esquerda) */}
+        <>
+          {/* Overlay escuro em mobile */}
+          {isMobile && (
             <motion.div
-              className="w-[400px] bg-background"
-              initial={{ opacity: 0.5 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
             />
+          )}
 
-            {/* Coluna do Artefato (direita) */}
-            <motion.div
-              className="flex-1 bg-muted dark:bg-background border-l border-border flex flex-col"
-              initial={{
-                opacity: 0,
-                x: 100
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                transition: {
-                  type: 'spring',
-                  stiffness: 200,
-                  damping: 30,
-                }
-              }}
-              exit={{
-                opacity: 0,
-                x: 100,
-                transition: {
-                  duration: 0.2
-                }
-              }}
-            >
-              {/* Header do Artefato */}
-              <div className="p-4 flex flex-row justify-between items-start">
-                <div className="flex flex-row gap-4 items-start">
-                  <Button
-                    onClick={onClose}
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+          {/* Container do Artefato */}
+          <motion.div
+            className={`fixed ${isMobile ? 'inset-0 z-50' : 'right-0 top-0 bottom-0 z-40'} bg-zinc-900 flex flex-col`}
+            initial={
+              isMobile
+                ? {
+                    opacity: 0,
+                    scale: 0.95,
+                    y: 20
+                  }
+                : {
+                    x: artifact.boundingBox.left - (windowWidth || 0) + artifact.boundingBox.width,
+                    y: artifact.boundingBox.top,
+                    width: artifact.boundingBox.width,
+                    height: artifact.boundingBox.height,
+                    borderRadius: 16,
+                  }
+            }
+            animate={
+              isMobile
+                ? {
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    transition: {
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 30,
+                    }
+                  }
+                : {
+                    x: 0,
+                    y: 0,
+                    width: windowWidth ? windowWidth - 400 : 'calc(100vw - 400px)',
+                    height: windowHeight,
+                    borderRadius: 0,
+                    transition: {
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 30,
+                    }
+                  }
+            }
+            exit={
+              isMobile
+                ? {
+                    opacity: 0,
+                    scale: 0.95,
+                    y: 20,
+                    transition: {
+                      duration: 0.2
+                    }
+                  }
+                : {
+                    opacity: 0,
+                    scale: 0.8,
+                    transition: {
+                      duration: 0.3
+                    }
+                  }
+            }
+          >
+            {/* Header do Artefato */}
+            <div className="p-4 flex flex-row justify-between items-start border-b border-zinc-800">
+              <div className="flex flex-row gap-4 items-start">
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  size="icon"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
 
-                  <div className="flex flex-col">
-                    <div className="font-medium">{artifact.title}</div>
-                    {isContentDirty ? (
-                      <div className="text-sm text-muted-foreground">
-                        Salvando alterações...
-                      </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        {`Atualizado ${formatDistanceToNow(currentDocument.createdAt, {
-                          addSuffix: true,
-                          locale: ptBR,
-                        })}`}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => setIsEditing(!isEditing)}
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {isEditing ? (
-                      <Minimize2 className="w-4 h-4" />
-                    ) : (
-                      <Maximize2 className="w-4 h-4" />
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={copyToClipboard}
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {copied ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={downloadArtifact}
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto bg-muted">
-                {agent && (
-                  <div className={`h-1 bg-gradient-to-r ${agent.color} opacity-30`} />
-                )}
-                
-                <div className="p-8">
-                  {isEditing ? (
-                    <TextEditor
-                      content={artifact.content}
-                      status={artifact.status}
-                      onSaveContent={saveContent}
-                      agentColor={agent?.color}
-                    />
+                <div className="flex flex-col">
+                  <div className="font-medium text-white">{artifact.title}</div>
+                  {isContentDirty ? (
+                    <div className="text-sm text-zinc-400">
+                      Salvando alterações...
+                    </div>
                   ) : (
-                    <div className="prose prose-invert max-w-none">
-                      <MarkdownRenderer content={artifact.content} />
+                    <div className="text-sm text-zinc-400">
+                      {`Atualizado ${formatDistanceToNow(currentDocument.createdAt, {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}`}
                     </div>
                   )}
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  {isEditing ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Button
+                  onClick={copyToClipboard}
+                  variant="ghost"
+                  size="icon"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  {copied ? (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={downloadArtifact}
+                  variant="ghost"
+                  size="icon"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto bg-zinc-950">
+              {agent && (
+                <div className={`h-1 bg-gradient-to-r ${agent.color} opacity-30`} />
+              )}
+              
+              <div className="p-8">
+                {isEditing ? (
+                  <TextEditor
+                    content={artifact.content}
+                    status={artifact.status}
+                    onSaveContent={saveContent}
+                    agentColor={agent?.color}
+                  />
+                ) : (
+                  <div className="prose prose-invert max-w-none">
+                    <MarkdownRenderer content={artifact.content} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

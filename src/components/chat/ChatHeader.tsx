@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, MoreHorizontal, Share2 } from "lucide-react";
+import { MoreHorizontal, Share2 } from "lucide-react";
 import { Agent } from "@/types";
 
 interface ChatHeaderProps {
@@ -45,21 +45,6 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
               {agent.speciality}
             </motion.p>
           </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2 border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800/70 backdrop-blur-sm transition-all duration-200"
-          >
-            Modelo GPT-4
-            <ChevronDown className="w-3 h-3" />
-          </Button>
         </motion.div>
       </div>
 
