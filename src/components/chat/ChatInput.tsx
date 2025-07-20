@@ -22,7 +22,7 @@ export function ChatInput({
   onSend, 
   agent, 
   isLoading = false,
-  placeholder = "Send a message..."
+  placeholder = "Conversar com..."
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -124,7 +124,7 @@ export function ChatInput({
           animate={{ opacity: 0.6, y: 0 }}
           className="text-[11px] text-muted-foreground text-center pb-3"
         >
-          Conversando com {agent.name} • Especialista em {agent.speciality}
+          Conversando com {agent.name} - Especialista em {agent.speciality}
         </motion.p>
       )}
     </div>
