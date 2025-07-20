@@ -401,22 +401,34 @@ export default function ChatPage() {
                   </div>
                 </ScrollArea>
 
-                <form 
-                  className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }}
-                >
-                  <ChatInput
-                    value={input}
-                    onChange={setInput}
-                    onSend={handleSendMessage}
-                    agent={selectedAgent}
-                    isLoading={isLoading}
-                    placeholder="Send a message..."
-                  />
-                </form>
+                <div className="pb-2">
+                  <form 
+                    className="flex mx-auto px-4 bg-background pb-2 gap-2 w-full md:max-w-3xl"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }}
+                  >
+                    <ChatInput
+                      value={input}
+                      onChange={setInput}
+                      onSend={handleSendMessage}
+                      agent={selectedAgent}
+                      isLoading={isLoading}
+                      placeholder="Send a message..."
+                    />
+                  </form>
+
+                  {selectedAgent && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 0.6, y: 0 }}
+                      className="text-[11px] text-muted-foreground text-center pb-2"
+                    >
+                      Conversando com {selectedAgent.name} - Especialista em {selectedAgent.speciality}
+                    </motion.p>
+                  )}
+                </div>
               </>
             )}
           </AnimatePresence>
