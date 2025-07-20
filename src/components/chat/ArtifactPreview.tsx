@@ -5,7 +5,6 @@ import { FileText, Maximize2, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Artifact } from "@/types";
 import { useRef } from "react";
-import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ArtifactPreviewProps {
   artifact: Artifact;
@@ -37,50 +36,41 @@ export function ArtifactPreview({ artifact, isStreaming = false, onOpen, agentCo
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
       onClick={handleClick}
-      className={cn(
-        "cursor-pointer group relative overflow-hidden",
-        "border rounded-2xl transition-all duration-200",
-        "hover:border-zinc-600 dark:border-zinc-700",
-        "bg-zinc-50 dark:bg-zinc-800/50"
-      )}
+      className="relative w-full cursor-pointer"
     >
       {/* Header */}
-      <div className="p-4 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="text-zinc-600 dark:text-zinc-400">
+      <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between bg-muted border-b-0">
+        <div className="flex flex-row items-center gap-3">
+          <div className="text-muted-foreground">
             {isStreaming ? (
-              <LoaderCircle className="w-4 h-4 animate-spin" />
+              <div className="animate-spin">
+                <LoaderCircle className="w-4 h-4" />
+              </div>
             ) : (
               <FileText className="w-4 h-4" />
             )}
           </div>
-          <div className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-            {artifact.title}
-          </div>
+          <div className="font-medium">{artifact.title}</div>
         </div>
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Maximize2 className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+        <div className="opacity-0 hover:opacity-100 transition-opacity">
+          <Maximize2 className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
 
       {/* Content Preview */}
-      <div className="relative">
-        <div className="p-6 text-sm text-zinc-700 dark:text-zinc-300 max-h-[250px] overflow-hidden">
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <MarkdownRenderer content={previewContent} />
-          </div>
-          
-          {hasMore && (
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-zinc-50 dark:from-zinc-800/50 to-transparent pointer-events-none" />
-          )}
+      <div className="h-[257px] overflow-y-scroll border rounded-b-2xl bg-muted border-t-0">
+        <div className="p-4 sm:px-14 sm:py-16 text-sm text-foreground/80">
+          <pre className="whitespace-pre-wrap font-sans">
+            {previewContent}
+            {hasMore && (
+              <span className="text-muted-foreground">...</span>
+            )}
+          </pre>
         </div>
       </div>
 
       {/* Hover Overlay */}
-      <div className={cn(
-        "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
-        "bg-gradient-to-t from-black/5 to-transparent dark:from-white/5"
-      )} />
+      <div className="absolute inset-0 rounded-2xl hover:bg-foreground/5 transition-colors pointer-events-none" />
     </motion.div>
   );
 }

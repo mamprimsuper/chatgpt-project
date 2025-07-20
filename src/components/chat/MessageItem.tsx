@@ -6,7 +6,6 @@ import { User } from "lucide-react";
 import { Message, Agent } from "@/types";
 import { ArtifactPreview } from "./ArtifactPreview";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import { useRef } from "react";
 
 interface MessageItemProps {
   message: Message;
@@ -33,10 +32,10 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
       }`}
     >
       {message.role === "assistant" && agent && (
-        <div 
-          className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white flex-shrink-0 shadow-lg ring-1 ring-white/10`}
-        >
-          {agent.icon}
+        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+          <div className="translate-y-px">
+            {agent.icon}
+          </div>
         </div>
       )}
       
@@ -46,14 +45,14 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="rounded-2xl px-5 py-4 bg-white text-black shadow-lg border border-zinc-200"
+            className="bg-primary text-primary-foreground px-5 py-3 rounded-xl"
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
             <motion.p 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
+              animate={{ opacity: 0.7 }}
               transition={{ delay: 0.3 }}
-              className="text-xs mt-3 opacity-60"
+              className="text-xs mt-2 opacity-70"
             >
               {message.timestamp.toLocaleTimeString("pt-BR", {
                 hour: "2-digit",
@@ -74,7 +73,7 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.5 }}
                 transition={{ delay: 0.5 }}
-                className="text-xs mt-4 text-zinc-500"
+                className="text-xs mt-4 text-muted-foreground"
               >
                 {message.timestamp.toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
@@ -101,8 +100,8 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
           transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
           className="order-2"
         >
-          <Avatar className="w-9 h-9 mt-1 flex-shrink-0 ring-2 ring-white/10">
-            <AvatarFallback className="bg-zinc-800 text-white">
+          <Avatar className="w-9 h-9 mt-1 flex-shrink-0">
+            <AvatarFallback className="bg-secondary text-secondary-foreground">
               <User className="w-4 h-4" />
             </AvatarFallback>
           </Avatar>

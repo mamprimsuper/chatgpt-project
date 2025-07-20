@@ -88,7 +88,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
     <AnimatePresence>
       {artifact.isVisible && (
         <motion.div
-          className="fixed inset-0 z-50 pointer-events-none"
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -97,7 +97,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
           <div className="h-full flex">
             {/* Coluna do Chat (esquerda) */}
             <motion.div
-              className="w-[400px] pointer-events-auto"
+              className="w-[400px] bg-background"
               initial={{ opacity: 0.5 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
@@ -105,7 +105,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
 
             {/* Coluna do Artefato (direita) */}
             <motion.div
-              className="flex-1 pointer-events-auto bg-zinc-900/95 backdrop-blur-xl border-l border-zinc-800 flex flex-col"
+              className="flex-1 bg-muted dark:bg-background border-l border-border flex flex-col"
               initial={{
                 opacity: 0,
                 x: 100
@@ -128,25 +128,25 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
               }}
             >
               {/* Header do Artefato */}
-              <div className="p-4 flex flex-row justify-between items-start border-b border-zinc-800 bg-zinc-900/80">
+              <div className="p-4 flex flex-row justify-between items-start">
                 <div className="flex flex-row gap-4 items-start">
                   <Button
                     onClick={onClose}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-4 h-4" />
                   </Button>
 
                   <div className="flex flex-col">
-                    <div className="font-medium text-white">{artifact.title}</div>
+                    <div className="font-medium">{artifact.title}</div>
                     {isContentDirty ? (
-                      <div className="text-sm text-zinc-400">
+                      <div className="text-sm text-muted-foreground">
                         Salvando alterações...
                       </div>
                     ) : (
-                      <div className="text-sm text-zinc-400">
+                      <div className="text-sm text-muted-foreground">
                         {`Atualizado ${formatDistanceToNow(currentDocument.createdAt, {
                           addSuffix: true,
                           locale: ptBR,
@@ -161,7 +161,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={() => setIsEditing(!isEditing)}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     {isEditing ? (
                       <Minimize2 className="w-4 h-4" />
@@ -174,10 +174,10 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={copyToClipboard}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     {copied ? (
-                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
@@ -187,7 +187,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     onClick={downloadArtifact}
                     variant="ghost"
                     size="icon"
-                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -195,7 +195,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto bg-zinc-900/50">
+              <div className="flex-1 overflow-y-auto bg-muted">
                 {agent && (
                   <div className={`h-1 bg-gradient-to-r ${agent.color} opacity-30`} />
                 )}

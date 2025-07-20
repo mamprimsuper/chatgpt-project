@@ -51,11 +51,11 @@ export function TextEditor({ content, status, onSaveContent, agentColor }: TextE
           onChange={handleChange}
           disabled={status === 'streaming'}
           className={cn(
-            "w-full p-6 bg-zinc-900/50 text-white resize-none outline-none rounded-lg",
-            "placeholder:text-zinc-600 leading-relaxed",
+            "w-full p-6 bg-background text-foreground resize-none outline-none rounded-lg",
+            "placeholder:text-muted-foreground leading-relaxed",
             "font-medium text-lg",
             "transition-all duration-200",
-            "focus:ring-2 focus:ring-zinc-700",
+            "focus:ring-2 focus:ring-border",
             status === 'streaming' && "opacity-70 cursor-not-allowed"
           )}
           placeholder="Comece a escrever seu texto..."
