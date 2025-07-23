@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Agent } from "@/types";
+import { BookOpen } from "lucide-react";
+import React from "react";
 
 interface AgentCardProps {
   agent: Agent;
@@ -48,7 +50,8 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
             }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
-            {agent.icon}
+            {/* Correção: Renderizar o ícone corretamente */}
+            {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
           </motion.div>
           <div className="min-w-0">
             <motion.h3 
@@ -120,18 +123,48 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="p-5 rounded-xl border border-zinc-800/50 bg-zinc-950/50 aspect-[4/3] animate-pulse"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-lg bg-zinc-800" />
+            <div className="space-y-2">
+              <div className="h-3 w-20 bg-zinc-800 rounded" />
+              <div className="h-2 w-16 bg-zinc-800 rounded" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-2 w-full bg-zinc-800 rounded" />
+            <div className="h-2 w-3/4 bg-zinc-800 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface AgentGridProps {
   agents: Agent[];
   onSelectAgent: (agent: Agent) => void;
+  loading?: boolean;
 }
 
-export function AgentGrid({ agents, onSelectAgent }: AgentGridProps) {
+export function AgentGrid({ agents, onSelectAgent, loading = false }: AgentGridProps) {
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
-      className="grid grid-cols-4 gap-4 max-w-6xl mx-auto"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto"
     >
       {agents.map((agent, index) => (
         <AgentCard

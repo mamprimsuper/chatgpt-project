@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { type Dispatch, memo, type SetStateAction, useCallback, useEffect, useState } from 'react';
+import { type Dispatch, memo, type SetStateAction, useCallback, useEffect, useState, useRef } from 'react';
 import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Agent, UIArtifact } from '@/types';
 import { TextEditor } from '@/artifacts/text/editor';
@@ -95,7 +95,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
         >
           {/* Container do Artefato */}
           <motion.div
-            className={`fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll ${isMobile ? '' : 'border-l dark:border-zinc-700 border-zinc-200'}`}
+            className={`fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-hidden ${isMobile ? '' : 'border-l dark:border-zinc-700 border-zinc-200'}`}
             initial={
               isMobile
                 ? {
@@ -104,7 +104,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     y: artifact.boundingBox.top,
                     height: artifact.boundingBox.height,
                     width: artifact.boundingBox.width,
-                    borderRadius: 50,
+                    borderRadius: 24,
                   }
                 : {
                     opacity: 1,
@@ -112,7 +112,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                     y: artifact.boundingBox.top,
                     height: artifact.boundingBox.height,
                     width: artifact.boundingBox.width,
-                    borderRadius: 50,
+                    borderRadius: 8,
                   }
             }
             animate={
@@ -158,7 +158,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
             }}
           >
             {/* Header do Artefato */}
-            <div className="p-2 flex flex-row justify-between items-start">
+            <div className="p-2 flex flex-row justify-between items-start border-b border-border">
               <div className="flex flex-row gap-4 items-start">
                 <Button
                   onClick={onClose}

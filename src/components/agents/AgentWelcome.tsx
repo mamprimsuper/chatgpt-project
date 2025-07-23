@@ -4,8 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, BookOpen } from "lucide-react";
 import { Agent } from "@/types";
+import React from "react";
 
 interface AgentWelcomeProps {
   agent: Agent;
@@ -63,7 +64,8 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
             transition={{ delay: 0.1 }}
           >
             <div className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10`}>
-              {agent.icon}
+              {/* Correção: Renderizar o ícone corretamente */}
+              {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
             </div>
             <div>
               <h1 className="text-lg font-semibold">{agent.name}</h1>

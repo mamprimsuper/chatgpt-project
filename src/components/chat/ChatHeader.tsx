@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Share2 } from "lucide-react";
+import { MoreHorizontal, Share2, BookOpen } from "lucide-react";
 import { Agent } from "@/types";
+import React from "react";
 
 interface ChatHeaderProps {
   agent?: Agent | null;
@@ -26,7 +27,8 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
           whileHover={{ scale: 1.02 }}
         >
           <div className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10`}>
-            {agent.icon}
+            {/* Correção: Renderizar o ícone corretamente */}
+            {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
           </div>
           <div>
             <motion.h1 

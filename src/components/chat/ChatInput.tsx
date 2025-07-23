@@ -13,6 +13,7 @@ interface ChatInputProps {
   onSend: () => void;
   agent?: Agent | null;
   isLoading?: boolean;
+  disabled?: boolean;
   placeholder?: string;
   className?: string;
 }
@@ -23,6 +24,7 @@ export function ChatInput({
   onSend, 
   agent, 
   isLoading = false,
+  disabled = false,
   placeholder = "Send a message...",
   className
 }: ChatInputProps) {
@@ -49,7 +51,7 @@ export function ChatInput({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      if (!isLoading && value.trim()) {
+      if (!isLoading && !disabled && value.trim()) {
         onSend();
       }
     }
@@ -67,10 +69,11 @@ export function ChatInput({
           "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none",
           "rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700",
           "pr-24",
+          disabled && "opacity-50 cursor-not-allowed",
           className
         )}
         rows={2}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
       />
       
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
@@ -78,7 +81,7 @@ export function ChatInput({
           variant="ghost"
           size="icon"
           className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-          disabled={isLoading}
+          disabled={isLoading || disabled}
         >
           <Paperclip size={14} />
         </Button>
@@ -96,7 +99,7 @@ export function ChatInput({
         ) : (
           <Button
             onClick={onSend}
-            disabled={!value.trim()}
+            disabled={!value.trim() || disabled}
             size="icon"
             className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
           >

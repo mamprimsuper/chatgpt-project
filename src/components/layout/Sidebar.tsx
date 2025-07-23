@@ -10,9 +10,12 @@ import {
   Sparkles, 
   PanelLeftClose,
   Clock,
-  Search
+  Search,
+  BookOpen,
+  Trash2
 } from "lucide-react";
 import { Agent, Chat } from "@/types";
+import React, { useState } from "react";
 
 interface SidebarProps {
   isVisible: boolean;
@@ -22,6 +25,7 @@ interface SidebarProps {
   onToggle: () => void;
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
+  onDeleteChat?: (chatId: string) => void;
 }
 
 export function Sidebar({ 
@@ -31,8 +35,27 @@ export function Sidebar({
   currentChatId, 
   onToggle, 
   onNewChat, 
-  onSelectChat 
+  onSelectChat,
+  onDeleteChat 
 }: SidebarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+
+  // Filtrar chats baseado na busca
+  const filteredChats = chats.filter(chat => 
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDeleteClick = (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation(); // Prevenir seleção do chat
+    if (onDeleteChat) {
+      if (confirm('Tem certeza que deseja apagar esta conversa?')) {
+        onDeleteChat(chatId);
+      }
+    }
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -97,7 +120,7 @@ export function Sidebar({
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg bg-gradient-to-br ${selectedAgent.color} text-white shadow-lg ring-1 ring-white/10`}>
-                  {selectedAgent.icon}
+                  {React.isValidElement(selectedAgent.icon) ? selectedAgent.icon : <BookOpen className="w-5 h-5" />}
                 </div>
                 <div>
                   <div className="text-sm font-medium">{selectedAgent.name}</div>
@@ -114,6 +137,8 @@ export function Sidebar({
               <input
                 type="text"
                 placeholder="Buscar conversas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 bg-input border border-border rounded-lg text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
               />
             </div>
@@ -122,42 +147,78 @@ export function Sidebar({
           {/* Chat List */}
           <ScrollArea className="flex-1 p-2">
             <div className="space-y-1">
-              {chats.length > 0 ? (
+              {filteredChats.length > 0 ? (
                 <>
                   <div className="px-2 py-2 text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                     <Clock className="w-3 h-3" />
-                    Últimos 7 dias
+                    Conversas Recentes
                   </div>
-                  {chats.map((chat, index) => (
-                    <motion.button
+                  {filteredChats.map((chat, index) => (
+                    <motion.div
                       key={chat.id}
-                      onClick={() => onSelectChat(chat.id)}
-                      className={`w-full text-left p-3 rounded-lg hover:bg-sidebar-accent transition-all duration-200 group ${
-                        currentChatId === chat.id ? 'bg-sidebar-accent' : ''
-                      }`}
-                      whileHover={{ scale: 1.01, x: 2 }}
-                      whileTap={{ scale: 0.99 }}
+                      className="relative"
+                      onMouseEnter={() => setHoveredChatId(chat.id)}
+                      onMouseLeave={() => setHoveredChatId(null)}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <div className="flex items-start gap-3">
-                        <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-foreground mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate group-hover:text-foreground transition-colors">
-                            {chat.title}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate transition-colors">
-                            {chat.lastMessage}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {chat.timestamp.toLocaleDateString("pt-BR")}
+                      <motion.button
+                        onClick={() => onSelectChat(chat.id)}
+                        className={`w-full text-left p-3 rounded-lg hover:bg-sidebar-accent transition-all duration-200 group ${
+                          currentChatId === chat.id ? 'bg-sidebar-accent' : ''
+                        }`}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <MessageSquare className="w-4 h-4 text-muted-foreground group-hover:text-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0 pr-8">
+                            <div className="text-sm font-medium truncate group-hover:text-foreground transition-colors">
+                              {chat.title}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate transition-colors">
+                              {chat.lastMessage}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {chat.timestamp.toLocaleDateString("pt-BR", {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.button>
+                      </motion.button>
+                      
+                      {/* Delete button */}
+                      <AnimatePresence>
+                        {hoveredChatId === chat.id && onDeleteChat && (
+                          <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            onClick={(e) => handleDeleteClick(e, chat.id)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   ))}
                 </>
+              ) : searchQuery ? (
+                <motion.div 
+                  className="px-2 py-8 text-center text-muted-foreground text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <Search className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                  <p>Nenhum chat encontrado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Tente buscar com outros termos</p>
+                </motion.div>
               ) : (
                 <motion.div 
                   className="px-2 py-8 text-center text-muted-foreground text-sm"

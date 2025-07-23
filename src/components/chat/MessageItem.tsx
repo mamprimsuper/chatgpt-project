@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Message, Agent } from "@/types";
-import { ArtifactPreview } from "./ArtifactPreview";
+import { ArtifactCard } from "./ArtifactCard";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { cn } from "@/lib/utils";
 
@@ -35,27 +35,19 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
           message.role === "user" && "ml-auto max-w-2xl w-fit"
         )}
       >
-        {message.role === "assistant" && (
-          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-            <div className="translate-y-px">
-              {agent?.icon}
-            </div>
-          </div>
-        )}
-        
         <div className="flex flex-col gap-4 w-full">
           {message.role === "user" ? (
-            <div className="bg-primary text-primary-foreground px-3 py-2 rounded-xl">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <div className="bg-primary text-primary-foreground px-4 py-3 rounded-xl ml-auto">
+              <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
             </div>
           ) : (
             <>
-              <div>
-                <MarkdownRenderer content={message.content} isLast={isLast} />
+              <div className="text-base leading-relaxed">
+                <MarkdownRenderer content={message.content} isLast={false} />
               </div>
               
               {message.artifact && (
-                <ArtifactPreview
+                <ArtifactCard
                   artifact={message.artifact}
                   onOpen={handleArtifactOpen}
                   agentColor={agent?.color}

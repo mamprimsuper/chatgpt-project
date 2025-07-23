@@ -1,9 +1,12 @@
+import { DbAgent } from '@/lib/supabase/types';
+
 export interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: Date;
   artifact?: Artifact;
+  _isNew?: boolean; // Flag interna para controlar streaming
 }
 
 export interface Artifact {
@@ -23,6 +26,12 @@ export interface Agent {
   color: string;
   greeting: string;
   suggestions: string[];
+  // Novos campos para agentes dinâmicos
+  systemPrompt?: string;
+  category?: string;
+  premiumTier?: number;
+  active?: boolean;
+  iconName?: string; // Nome do ícone do banco de dados
 }
 
 export interface Chat {
@@ -51,6 +60,7 @@ export interface UIArtifact {
     width: number;
     height: number;
   };
+  scrollPosition?: number; // Adicionar propriedade para salvar posição do scroll
 }
 
 export interface Document {
@@ -58,4 +68,27 @@ export interface Document {
   content: string;
   createdAt: Date;
   updatedAt?: Date;
+}
+
+// Utility function para converter DbAgent para Agent
+export function dbAgentToAgent(dbAgent: DbAgent): Agent {
+  const suggestions = Array.isArray(dbAgent.suggestions) 
+    ? dbAgent.suggestions as string[]
+    : [];
+
+  return {
+    id: dbAgent.id,
+    name: dbAgent.name,
+    description: dbAgent.description || '',
+    speciality: dbAgent.speciality || '',
+    icon: null as any, // Será processado depois no processAgentsWithIcons
+    color: dbAgent.color,
+    greeting: dbAgent.greeting || '',
+    suggestions,
+    systemPrompt: dbAgent.system_prompt,
+    category: dbAgent.category,
+    premiumTier: dbAgent.premium_tier,
+    active: dbAgent.active,
+    iconName: dbAgent.icon_name, // Incluir o nome do ícone do banco
+  };
 }
