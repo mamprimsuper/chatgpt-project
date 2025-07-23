@@ -71,36 +71,29 @@
   }
   
   html {
-    font-size: 18px; /* Aumenta o tamanho base de 16px para 18px */
+    font-size: 16px; /* Tamanho padrão web */
   }
   
   body {
     @apply bg-background text-foreground;
-    font-size: 1rem; /* 18px */
-    line-height: 1.6;
+    font-size: 1rem; /* 16px */
+    line-height: 1.5;
   }
   
-  /* Aumentar fontes específicas */
-  h1 { @apply text-3xl; }
-  h2 { @apply text-2xl; }
-  h3 { @apply text-xl; }
-  h4 { @apply text-lg; }
+  /* Tamanhos de headers mais equilibrados */
+  h1 { @apply text-2xl; }
+  h2 { @apply text-xl; }
+  h3 { @apply text-lg; }
+  h4 { @apply text-base; }
   
   /* Mensagens do chat */
   .prose {
     font-size: 1rem;
-    line-height: 1.7;
+    line-height: 1.6;
   }
   
   /* Input do chat */
   textarea, input {
     font-size: 1rem;
-  }
-  
-  /* Ajustes para mobile */
-  @media (max-width: 768px) {
-    html {
-      font-size: 16px;
-    }
   }
 }
