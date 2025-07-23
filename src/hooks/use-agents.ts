@@ -8,7 +8,7 @@ interface UseAgentsResult {
   refetch: () => void;
 }
 
-export function useAgents(): UseAgentsResult {
+export function useAgents(includeInactive: boolean = false): UseAgentsResult {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +18,11 @@ export function useAgents(): UseAgentsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/agents');
+      const url = includeInactive 
+        ? '/api/agents?include_inactive=true' 
+        : '/api/agents';
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch agents: ${response.status}`);
@@ -38,7 +42,7 @@ export function useAgents(): UseAgentsResult {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [includeInactive]);
 
   useEffect(() => {
     fetchAgents();

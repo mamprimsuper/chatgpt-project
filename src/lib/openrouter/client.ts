@@ -1,75 +1,87 @@
 import { Agent } from '@/types';
 
 export interface OpenRouterMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | null;
+  tool_calls?: any[];
+  tool_call_id?: string;
 }
 
-export interface OpenRouterRequest {
+export interface OpenRouterRequestBody {
   model: string;
   messages: OpenRouterMessage[];
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+  tools?: any[];
+  tool_choice?: 'auto' | 'none' | 'required' | any;
 }
 
 export interface OpenRouterResponse {
-  id: string;
-  choices: {
+  choices: Array<{
     message: {
-      role: string;
       content: string;
+      role: string;
+      tool_calls?: any[];
     };
     finish_reason: string;
-  }[];
+  }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
-export class OpenRouterClient {
+class OpenRouterClient {
   private apiKey: string;
-  private apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private model: string;
+  private baseUrl: string;
+  private defaultModel: string;
 
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
-    this.model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-    
+    this.baseUrl = 'https://openrouter.ai/api/v1';
+    this.defaultModel = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
+
     if (!this.apiKey) {
-      console.warn('OpenRouter API key not found in environment variables');
+      console.warn('OPENROUTER_API_KEY not found in environment variables');
     }
   }
 
   async sendMessage(
-    messages: OpenRouterMessage[],
-    agent: Agent | null,
-    stream: boolean = false
+    messages: OpenRouterMessage[], 
+    agent?: Agent | null,
+    stream: boolean = false,
+    additionalOptions?: {
+      tools?: any[];
+      tool_choice?: 'auto' | 'none' | 'required' | any;
+    }
   ): Promise<Response> {
-    // Adicionar system prompt do agente se disponível
-    const systemMessages: OpenRouterMessage[] = [];
-    
-    if (agent?.systemPrompt) {
-      systemMessages.push({
-        role: 'system',
-        content: agent.systemPrompt
-      });
-    } else if (agent) {
-      // System prompt padrão baseado no agente
-      systemMessages.push({
-        role: 'system',
-        content: `Você é ${agent.name}, um especialista em ${agent.speciality}. ${agent.description}. Responda em português brasileiro de forma natural e profissional.`
-      });
+    if (!this.apiKey) {
+      throw new Error('OpenRouter API key not configured');
     }
 
-    const allMessages = [...systemMessages, ...messages];
+    // Se um agente foi fornecido e não há system message, adicionar
+    if (agent && agent.systemPrompt && !messages.some(m => m.role === 'system')) {
+      messages = [
+        {
+          role: 'system',
+          content: agent.systemPrompt
+        },
+        ...messages
+      ];
+    }
 
-    const requestBody: OpenRouterRequest = {
-      model: this.model,
-      messages: allMessages,
+    const requestBody: OpenRouterRequestBody = {
+      model: this.defaultModel,
+      messages,
       temperature: 0.7,
-      max_tokens: 2000,
-      stream: stream
+      max_tokens: 4096,
+      stream,
+      ...additionalOptions
     };
 
-    const response = await fetch(this.apiUrl, {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
@@ -82,51 +94,27 @@ export class OpenRouterClient {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`OpenRouter API error: ${error}`);
+      console.error('OpenRouter API error:', error);
+      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
     }
 
     return response;
   }
 
-  // Método helper para processar streaming
-  async *processStream(response: Response) {
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
+  // Método helper para testar a conexão
+  async testConnection(): Promise<boolean> {
     try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              return;
-            }
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                yield content;
-              }
-            } catch (e) {
-              // Ignorar erros de parsing
-            }
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
+      const response = await this.sendMessage([
+        { role: 'user', content: 'Hello' }
+      ]);
+      const data = await response.json();
+      return !!data.choices?.[0]?.message?.content;
+    } catch (error) {
+      console.error('OpenRouter connection test failed:', error);
+      return false;
     }
   }
 }
 
+// Exportar instância única
 export const openRouterClient = new OpenRouterClient();

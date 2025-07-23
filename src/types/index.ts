@@ -30,7 +30,7 @@ export interface Agent {
   systemPrompt?: string;
   category?: string;
   premiumTier?: number;
-  active?: boolean;
+  active?: boolean | 'coming_soon';
   iconName?: string; // Nome do ícone do banco de dados
 }
 

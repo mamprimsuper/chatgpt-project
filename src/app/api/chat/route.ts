@@ -8,8 +8,14 @@ import {
   userRequestsArtifact
 } from '@/lib/openrouter/utils';
 import { Agent } from '@/types';
+import { createDocumentTool, executeCreateDocument } from '@/lib/ai/tools/create-document';
+import { getAgentSystemPrompt } from '@/lib/ai/prompts';
+import type { ToolCall } from '@/lib/ai/types';
 
 export const runtime = 'edge';
+
+// Agentes que podem usar tools
+const TOOL_ENABLED_AGENTS = ['content-creator', 'copywriter', 'ux-writer', 'scriptwriter'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,69 +40,91 @@ export async function POST(request: NextRequest) {
       content: msg.content
     }));
 
-    // Verificar se o usuário está pedindo um documento
-    const userWantsArtifact = userRequestsArtifact(lastUserMessage);
+    // Verificar se o agente pode usar tools
+    const canUseTools = agent && TOOL_ENABLED_AGENTS.includes(agent.id);
+    const tools = canUseTools ? [createDocumentTool] : undefined;
 
-    // Adicionar system prompt especial para agentes que podem criar artefatos
-    let systemPromptAdded = false;
-    if (agent && userWantsArtifact) {
-      const systemPrompt = getArtifactSystemPrompt(agent);
-      // Verificar se já não existe um system prompt
-      if (!openRouterMessages.some(msg => msg.role === 'system')) {
-        openRouterMessages.unshift({
-          role: 'system',
-          content: systemPrompt
-        });
-        systemPromptAdded = true;
-      }
-    }
-
-    // Se for streaming (implementação futura)
-    if (stream) {
-      const response = await openRouterClient.sendMessage(
-        openRouterMessages,
-        systemPromptAdded ? null : agent,
-        true
-      );
-
-      // Criar um TransformStream para processar o streaming
-      const encoder = new TextEncoder();
-      const decoder = new TextDecoder();
-      
-      const transformStream = new TransformStream({
-        async transform(chunk, controller) {
-          const text = decoder.decode(chunk);
-          const lines = text.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              controller.enqueue(encoder.encode(line + '\n\n'));
-            }
-          }
-        }
+    // Adicionar system prompt
+    const systemPrompt = agent ? getAgentSystemPrompt(agent, canUseTools) : undefined;
+    if (systemPrompt && !openRouterMessages.some(msg => msg.role === 'system')) {
+      openRouterMessages.unshift({
+        role: 'system',
+        content: systemPrompt
       });
-
-      return new Response(
-        response.body!.pipeThrough(transformStream),
-        {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-          },
-        }
-      );
     }
 
-    // Requisição normal (não streaming)
+    // Fazer a chamada para OpenRouter com tools
     const response = await openRouterClient.sendMessage(
       openRouterMessages,
-      systemPromptAdded ? null : agent,
-      false
+      null, // agent já está no system prompt
+      false,
+      {
+        tools,
+        tool_choice: canUseTools ? 'auto' : undefined
+      }
     );
 
     const data = await response.json();
+    
+    // Verificar se a IA chamou alguma tool
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    
+    if (toolCalls && toolCalls.length > 0) {
+      // Processar tool calls
+      const toolCall = toolCalls[0] as ToolCall;
+      
+      if (toolCall.function.name === 'createDocument') {
+        const args = JSON.parse(toolCall.function.arguments);
+        const toolResult = await executeCreateDocument(args);
+        
+        // Agora precisamos fazer uma segunda chamada para gerar o conteúdo
+        const messagesWithTool = [
+          ...openRouterMessages,
+          {
+            role: 'assistant' as const,
+            content: null,
+            tool_calls: toolCalls
+          },
+          {
+            role: 'tool' as const,
+            content: JSON.stringify(toolResult),
+            tool_call_id: toolCall.id
+          }
+        ];
+        
+        // Segunda chamada para gerar o conteúdo do documento
+        const contentResponse = await openRouterClient.sendMessage(
+          messagesWithTool,
+          null,
+          false,
+          {
+            tools,
+            tool_choice: 'none' // Não permitir mais tool calls
+          }
+        );
+        
+        const contentData = await contentResponse.json();
+        const fullContent = contentData.choices?.[0]?.message?.content || '';
+        
+        // Retornar com artefato
+        return NextResponse.json({
+          content: `Criei o documento "${args.title}" para você. O conteúdo está disponível para visualização e edição.`,
+          artifact: {
+            id: toolResult.id,
+            type: 'text',
+            title: args.title,
+            content: fullContent
+          },
+          toolUsed: true
+        });
+      }
+    }
+    
+    // Se não usou tools, continuar com o fluxo antigo
     const fullContent = data.choices?.[0]?.message?.content || '';
+
+    // Verificar se o usuário está pedindo um documento (compatibilidade com sistema antigo)
+    const userWantsArtifact = userRequestsArtifact(lastUserMessage);
 
     // Analisar a resposta para decidir sobre artefato
     const { messageContent, artifactContent } = analyzeResponseForArtifact(
@@ -107,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     // Se houver conteúdo para artefato, criar
     let artifact = null;
-    if (artifactContent) {
+    if (artifactContent && userWantsArtifact) {
       artifact = {
         id: Date.now().toString(),
         type: 'text',
@@ -117,18 +145,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Log para debug
-    console.log('Artifact Decision:', {
+    console.log('Response Decision:', {
       userMessage: lastUserMessage.substring(0, 100),
-      userWantsArtifact,
+      canUseTools,
+      toolsUsed: !!toolCalls,
       hasArtifact: !!artifact,
-      contentLength: fullContent.length,
-      artifactLength: artifactContent?.length || 0
+      contentLength: fullContent.length
     });
 
     // Resposta com ou sem artefato
     return NextResponse.json({
-      content: messageContent,
-      artifact
+      content: artifact ? messageContent : fullContent,
+      artifact,
+      toolUsed: false
     });
 
   } catch (error) {

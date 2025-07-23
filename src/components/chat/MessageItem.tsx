@@ -3,11 +3,12 @@
 import { motion } from "framer-motion";
 import { Message, Agent } from "@/types";
 import { ArtifactCard } from "./ArtifactCard";
+import { DocumentPreview } from "./DocumentPreview";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { cn } from "@/lib/utils";
 
 interface MessageItemProps {
-  message: Message;
+  message: Message & { toolUsed?: boolean };
   agent?: Agent | null;
   isLast?: boolean;
   onArtifactOpen?: (artifact: any, rect: DOMRect) => void;
@@ -47,11 +48,21 @@ export function MessageItem({ message, agent, isLast, onArtifactOpen }: MessageI
               </div>
               
               {message.artifact && (
-                <ArtifactCard
-                  artifact={message.artifact}
-                  onOpen={handleArtifactOpen}
-                  agentColor={agent?.color}
-                />
+                // Usar DocumentPreview se foi gerado via tool, senão usar ArtifactCard
+                message.toolUsed ? (
+                  <DocumentPreview
+                    artifact={message.artifact}
+                    onOpen={handleArtifactOpen}
+                    agentColor={agent?.color}
+                    isToolGenerated={true}
+                  />
+                ) : (
+                  <ArtifactCard
+                    artifact={message.artifact}
+                    onOpen={handleArtifactOpen}
+                    agentColor={agent?.color}
+                  />
+                )
               )}
             </>
           )}

@@ -5,13 +5,23 @@ import { processAgentsWithIcons } from '@/lib/agent-utils';
 import { ICON_MAP } from '@/lib/icons';
 
 // GET - Listar agentes
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: agents, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const includeInactive = searchParams.get('include_inactive') === 'true';
+    
+    let query = supabase
       .from('agents')
       .select('*')
-      .eq('active', true)
       .order('created_at', { ascending: true });
+    
+    // Por padrão, retorna apenas agentes ativos
+    // Para admin, permite buscar todos incluindo inativos
+    if (!includeInactive) {
+      query = query.eq('active', true);
+    }
+    
+    const { data: agents, error } = await query;
 
     if (error) {
       console.error('Error fetching agents:', error);
