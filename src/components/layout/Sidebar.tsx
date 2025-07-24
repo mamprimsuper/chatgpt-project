@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Agent, Chat } from "@/types";
 import React, { useState } from "react";
+import { ThemeSelector } from "@/components/theme-selector";
 
 interface SidebarProps {
   isVisible: boolean;
@@ -119,8 +120,14 @@ export function Sidebar({
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${selectedAgent.color} text-white shadow-lg ring-1 ring-white/10`}>
-                  {React.isValidElement(selectedAgent.icon) ? selectedAgent.icon : <BookOpen className="w-5 h-5" />}
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${selectedAgent.color} text-white shadow-lg ring-1 ring-white/10 flex items-center justify-center`}>
+                  {React.isValidElement(selectedAgent.icon) ? 
+                    React.cloneElement(selectedAgent.icon as React.ReactElement, { 
+                      className: "w-5 h-5",
+                      style: { color: 'white' }
+                    }) : 
+                    <BookOpen className="w-5 h-5 text-white" />
+                  }
                 </div>
                 <div>
                   <div className="text-sm font-medium">{selectedAgent.name}</div>
@@ -235,14 +242,18 @@ export function Sidebar({
 
           {/* Footer */}
           <motion.div 
-            className="p-4 border-t border-sidebar-border"
+            className="p-4 border-t border-sidebar-border space-y-3"
           >
+            {/* User Info */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
                 <User className="w-3 h-3" />
               </div>
               <span className="font-medium">Usuário</span>
             </div>
+            
+            {/* Theme Selector */}
+            <ThemeSelector />
           </motion.div>
         </motion.div>
       )}

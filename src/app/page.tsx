@@ -109,16 +109,9 @@ export default function ChatPage() {
         handleAIResponse(initialMessage, chatId, [userMessage], true);
       }
     } else {
-      // Apenas mostrar greeting como primeira mensagem
-      const greetingMessage = await saveMessage(chatId, {
-        content: selectedAgent.greeting,
-        role: "assistant",
-      });
-      
-      if (greetingMessage) {
-        setMessages([greetingMessage]);
-        setAppState("chat");
-      }
+      // Iniciar chat limpo - IA responderá baseada no system prompt
+      setMessages([]);
+      setAppState("chat");
     }
 
     // Atualizar lista de chats

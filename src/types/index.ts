@@ -24,7 +24,7 @@ export interface Agent {
   speciality: string;
   icon: React.ReactNode;
   color: string;
-  greeting: string;
+  greeting?: string;
   suggestions: string[];
   // Novos campos para agentes dinâmicos
   systemPrompt?: string;
@@ -81,14 +81,13 @@ export function dbAgentToAgent(dbAgent: DbAgent): Agent {
     name: dbAgent.name,
     description: dbAgent.description || '',
     speciality: dbAgent.speciality || '',
-    icon: null as any, // Será processado depois no processAgentsWithIcons
+    icon: null, // Não usado mais - iconName é usado diretamente
     color: dbAgent.color,
-    greeting: dbAgent.greeting || '',
     suggestions,
     systemPrompt: dbAgent.system_prompt,
     category: dbAgent.category,
     premiumTier: dbAgent.premium_tier,
     active: dbAgent.active,
-    iconName: dbAgent.icon_name, // Incluir o nome do ícone do banco
+    iconName: dbAgent.icon_name,
   };
 }

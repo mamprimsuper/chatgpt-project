@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Agent } from "@/types";
 import { BookOpen } from "lucide-react";
+import { getIconComponent } from "@/lib/icons";
 import React from "react";
 
 interface AgentCardProps {
@@ -15,7 +16,7 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
   return (
     <motion.button
       onClick={() => onSelect(agent)}
-      className="group relative p-5 rounded-xl border border-zinc-800/50 hover:border-zinc-600/50 bg-zinc-950/50 hover:bg-zinc-900/50 transition-all duration-300 text-left overflow-hidden aspect-[4/3] backdrop-blur-sm"
+      className="group relative p-5 rounded-xl border border-border hover:border-border/70 bg-card hover:bg-accent/50 transition-all duration-300 text-left overflow-hidden aspect-[4/3] backdrop-blur-sm shadow-sm hover:shadow-md"
       whileHover={{ 
         scale: 1.02, 
         y: -4,
@@ -33,16 +34,16 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
       style={{ perspective: "1000px" }}
     >
       {/* Glow effect */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-500 blur-xl`} />
       
       {/* Border glow */}
-      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-30 transition-opacity duration-300`} 
+      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 transition-opacity duration-300`} 
            style={{ padding: '1px', background: 'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
       
       <div className="relative z-10 h-full flex flex-col">
         <div className="flex items-center gap-3 mb-3">
           <motion.div 
-            className={`p-2.5 rounded-lg bg-gradient-to-br ${agent.color} text-white shadow-lg flex-shrink-0 ring-1 ring-white/20`}
+            className={`w-12 h-12 rounded-lg bg-gradient-to-br ${agent.color} text-white shadow-lg flex items-center justify-center flex-shrink-0 ring-1 ring-white/20`}
             whileHover={{ 
               scale: 1.1,
               rotate: 5,
@@ -50,20 +51,22 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
             }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
-            {/* Correção: Renderizar o ícone corretamente */}
-            {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
+            {(() => {
+              const IconComponent = getIconComponent(agent.iconName || 'lightbulb');
+              return <IconComponent className="w-6 h-6 text-white" />;
+            })()}
           </motion.div>
           <div className="min-w-0">
             <motion.h3 
-              className="text-sm font-bold leading-tight text-white group-hover:text-white transition-colors"
-              initial={{ opacity: 0.8 }}
+              className="text-sm font-bold leading-tight text-foreground group-hover:text-foreground transition-colors"
+              initial={{ opacity: 0.9 }}
               whileHover={{ opacity: 1 }}
             >
               {agent.name}
             </motion.h3>
             <motion.p 
-              className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors"
-              initial={{ opacity: 0.6 }}
+              className="text-xs text-muted-foreground group-hover:text-muted-foreground/80 transition-colors"
+              initial={{ opacity: 0.7 }}
               whileHover={{ opacity: 1 }}
             >
               {agent.speciality}
@@ -72,15 +75,15 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
         </div>
         
         <motion.p 
-          className="text-xs text-zinc-400 leading-relaxed flex-1 group-hover:text-zinc-300 transition-colors"
-          initial={{ opacity: 0.7 }}
+          className="text-xs text-muted-foreground leading-relaxed flex-1 group-hover:text-foreground/80 transition-colors"
+          initial={{ opacity: 0.8 }}
           whileHover={{ opacity: 1 }}
         >
           {agent.description}
         </motion.p>
 
         <motion.div 
-          className="flex items-center text-zinc-500 group-hover:text-white transition-colors mt-3"
+          className="flex items-center text-muted-foreground group-hover:text-foreground transition-colors mt-3"
           initial={{ x: 0 }}
           whileHover={{ x: 3 }}
         >
@@ -100,7 +103,7 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
+            className="absolute w-1 h-1 bg-foreground/50 rounded-full"
             style={{
               left: `${20 + i * 15}%`,
               top: `${30 + Math.sin(i) * 20}%`,
@@ -129,18 +132,18 @@ function LoadingSkeleton() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="p-5 rounded-xl border border-zinc-800/50 bg-zinc-950/50 aspect-[4/3] animate-pulse"
+          className="p-5 rounded-xl border border-border bg-card aspect-[4/3] animate-pulse"
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-zinc-800" />
+            <div className="w-10 h-10 rounded-lg bg-muted" />
             <div className="space-y-2">
-              <div className="h-3 w-20 bg-zinc-800 rounded" />
-              <div className="h-2 w-16 bg-zinc-800 rounded" />
+              <div className="h-3 w-20 bg-muted rounded" />
+              <div className="h-2 w-16 bg-muted rounded" />
             </div>
           </div>
           <div className="space-y-2">
-            <div className="h-2 w-full bg-zinc-800 rounded" />
-            <div className="h-2 w-3/4 bg-zinc-800 rounded" />
+            <div className="h-2 w-full bg-muted rounded" />
+            <div className="h-2 w-3/4 bg-muted rounded" />
           </div>
         </div>
       ))}

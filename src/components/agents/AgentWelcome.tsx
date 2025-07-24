@@ -40,7 +40,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
       <motion.header 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-4 border-b border-border"
+        className="flex items-center justify-between p-4 border-b border-border bg-background/80 backdrop-blur-sm"
       >
         <div className="flex items-center gap-4">
           <motion.div
@@ -63,12 +63,17 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10`}>
-              {/* Correção: Renderizar o ícone corretamente */}
-              {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10 flex items-center justify-center`}>
+              {React.isValidElement(agent.icon) ? 
+                React.cloneElement(agent.icon as React.ReactElement, { 
+                  className: "w-6 h-6",
+                  style: { color: 'white' }
+                }) : 
+                <BookOpen className="w-6 h-6 text-white" />
+              }
             </div>
             <div>
-              <h1 className="text-lg font-semibold">{agent.name}</h1>
+              <h1 className="text-lg font-semibold text-foreground">{agent.name}</h1>
               <p className="text-xs text-muted-foreground">{agent.speciality}</p>
             </div>
           </motion.div>
@@ -76,11 +81,11 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
       </motion.header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden bg-background">
         {/* Background effects */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br ${agent.color} opacity-5 rounded-full blur-3xl`} />
-          <div className={`absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br ${agent.color} opacity-10 rounded-full blur-2xl`} />
+          <div className={`absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br ${agent.color} opacity-5 dark:opacity-5 rounded-full blur-3xl`} />
+          <div className={`absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br ${agent.color} opacity-10 dark:opacity-10 rounded-full blur-2xl`} />
         </div>
 
         <div className="relative z-10 w-full max-w-3xl">
@@ -98,7 +103,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             >
               <Sparkles className="w-6 h-6 text-yellow-400" />
-              <h2 className="text-4xl font-bold">
+              <h2 className="text-4xl font-bold text-foreground">
                 Em que posso ajudar?
               </h2>
               <Sparkles className="w-6 h-6 text-yellow-400" />
@@ -128,7 +133,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
               <motion.button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="group p-6 rounded-xl border border-border hover:border-primary/50 bg-card hover:bg-accent transition-all duration-300 text-left relative overflow-hidden"
+                className="group p-6 rounded-xl border border-border hover:border-primary/50 bg-card hover:bg-accent/50 transition-all duration-300 text-left relative overflow-hidden shadow-sm hover:shadow-md"
                 whileHover={{ 
                   scale: 1.02, 
                   y: -2,
@@ -142,7 +147,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                 <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
                 
                 <div className="relative z-10">
-                  <p className="text-sm group-hover:text-foreground transition-colors leading-relaxed">
+                  <p className="text-sm text-foreground group-hover:text-foreground transition-colors leading-relaxed">
                     {suggestion}
                   </p>
                   
@@ -174,7 +179,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
           >
             <div className="relative group">
               {/* Glow effect */}
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${agent.color} opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300`} />
+              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${agent.color} opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 blur-xl transition-opacity duration-300`} />
               
               <div className="relative">
                 <Input
@@ -182,7 +187,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ou digite sua pergunta personalizada..."
-                  className="w-full pr-16 py-6 text-base rounded-2xl bg-muted border-border focus:border-primary min-h-[60px] transition-all duration-300"
+                  className="w-full pr-16 py-6 text-base rounded-2xl bg-background border-border focus:border-primary min-h-[60px] transition-all duration-300 shadow-sm"
                 />
                 
                 <motion.div
@@ -196,7 +201,7 @@ export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) 
                     size="icon"
                     className={`h-10 w-10 transition-all duration-300 ${
                       input.trim()
-                        ? `bg-gradient-to-r ${agent.color} hover:shadow-lg`
+                        ? `bg-gradient-to-r ${agent.color} hover:shadow-lg text-white`
                         : 'bg-muted cursor-not-allowed text-muted-foreground'
                     }`}
                   >

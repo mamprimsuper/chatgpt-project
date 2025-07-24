@@ -26,9 +26,14 @@ export function ChatHeader({ agent, onShare, onSettings }: ChatHeaderProps) {
           className="flex items-center gap-3"
           whileHover={{ scale: 1.02 }}
         >
-          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10`}>
-            {/* Correção: Renderizar o ícone corretamente */}
-            {React.isValidElement(agent.icon) ? agent.icon : <BookOpen className="w-5 h-5" />}
+          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} text-white shadow-lg ring-1 ring-white/10 flex items-center justify-center`}>
+            {React.isValidElement(agent.icon) ? 
+              React.cloneElement(agent.icon as React.ReactElement, { 
+                className: "w-6 h-6",
+                style: { color: 'white' }
+              }) : 
+              <BookOpen className="w-6 h-6 text-white" />
+            }
           </div>
           <div>
             <motion.h1 

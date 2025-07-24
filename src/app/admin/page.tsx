@@ -23,6 +23,7 @@ import {
 import { ICON_MAP } from "@/lib/icons";
 import { Agent } from "@/types";
 import { useAgents } from "@/hooks/use-agents";
+import { Header } from "@/components/header";
 
 interface AgentFormData {
   name: string;
@@ -165,7 +166,6 @@ export default function AdminPage() {
         active: formData.status === 'active' ? true : 
                 formData.status === 'inactive' ? false : 
                 'coming_soon',
-        greeting: `Olá! Sou ${formData.name}. Como posso ajudar você hoje?`,
         suggestions: [
           'Como posso começar?',
           'Me dê algumas dicas',
@@ -246,30 +246,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Admin - Gerenciar Agentes
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Crie e gerencie os agentes especializados • {agents.length} agente{agents.length !== 1 ? 's' : ''} total
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={refetch} variant="outline" size="sm" className="gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Atualizar
-              </Button>
-              <Button onClick={openCreateForm} className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Plus className="w-4 h-4" />
-                Novo Agente
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Estatísticas */}
       <div className="container mx-auto px-6 py-6">

@@ -1,28 +1,42 @@
 // Prompts do sistema para instruir a IA sobre o uso de tools
 
 export const toolsSystemPrompt = `
-You have access to tools that help you create structured documents for users. Here's how to use them effectively:
+VOCÊ TEM ACESSO A FERRAMENTAS PARA CRIAR DOCUMENTOS ESTRUTURADOS!
 
-## When to use the createDocument tool:
-- When users ask for articles, blog posts, essays, or any written content
-- When users request emails, letters, or formal documents
-- When users want content they can edit and save
-- For substantial content (more than a few paragraphs)
-- When users explicitly ask for a "document" or "artifact"
+## 🎯 REGRA PRINCIPAL: USE SEMPRE A FERRAMENTA createDocument QUANDO:
+- Usuário pedir artigos, posts, textos, documentos, conteúdos
+- Qualquer pedido de escrita estruturada
+- Quando precisa criar algo que o usuário vai editar/salvar
+- Para conteúdos longos e bem formatados
 
-## When NOT to use createDocument:
-- For simple explanations or answers
-- For short responses or quick tips
-- For conversational replies
-- When the user asks to keep the response in the chat
+## ✅ Exemplos de quando USAR createDocument:
+- "Escreva um artigo sobre..."
+- "Crie um post para blog..."
+- "Elabore um guia sobre..."
+- "Faça um texto sobre..."
+- "Redija um documento..."
+- "Desenvolva conteúdo sobre..."
 
-## How to use the tool:
-1. When you decide to create a document, call the createDocument tool with an appropriate title
-2. After the tool returns, generate the full content of the document
-3. The content should be well-structured with sections, headings, and proper formatting
-4. Use markdown formatting for better readability
+## ❌ Quando NÃO usar:
+- Respostas conversacionais simples
+- Explicações rápidas
+- Perguntas e respostas diretas
 
-Remember: The goal is to create valuable, editable documents that users can work with outside the chat.
+## 🔧 Como usar:
+1. SEMPRE chame createDocument primeiro com um título descritivo
+2. DEPOIS que a ferramenta retornar, escreva o conteúdo completo
+3. Use formatação Markdown rica: headers, listas, etc.
+4. Seja detalhado e estruturado
+5. Mínimo 800 palavras para artigos
+
+## 🎨 Estrutura recomendada:
+- Título claro no início
+- Introdução engajante
+- Seções bem divididas
+- Conclusão marcante
+- Formatação profissional
+
+LEMBRE-SE: O objetivo é criar conteúdo editável e valioso que o usuário possa trabalhar!
 `;
 
 export function getAgentSystemPrompt(agent: { systemPrompt?: string }, includeTools: boolean = false) {

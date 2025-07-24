@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { dbAgentToAgent } from '@/types';
-import { processAgentsWithIcons } from '@/lib/agent-utils';
 import { ICON_MAP } from '@/lib/icons';
 
 // GET - Listar agentes
@@ -37,13 +36,10 @@ export async function GET(request: NextRequest) {
 
     // Converter DbAgent para Agent
     const formattedAgents = agents.map(dbAgentToAgent);
-    
-    // Processar ícones
-    const agentsWithIcons = processAgentsWithIcons(formattedAgents);
 
-    console.log('Agents processed:', agentsWithIcons.length);
+    console.log('Agents processed:', formattedAgents.length);
 
-    return NextResponse.json(agentsWithIcons);
+    return NextResponse.json(formattedAgents);
   } catch (error) {
     console.error('Error in agents API:', error);
     return NextResponse.json(
@@ -96,7 +92,6 @@ export async function POST(request: NextRequest) {
       description: body.description || null,
       speciality: body.speciality || null,
       system_prompt: body.system_prompt,
-      greeting: body.greeting || `Olá! Sou ${body.name}. Como posso ajudar você hoje?`,
       suggestions: body.suggestions || [
         'Como posso começar?',
         'Me dê algumas dicas',
@@ -127,11 +122,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Converter e processar o agente criado
+    // Converter o agente criado
     const formattedAgent = dbAgentToAgent(data);
-    const [agentWithIcon] = processAgentsWithIcons([formattedAgent]);
 
-    return NextResponse.json(agentWithIcon, { status: 201 });
+    return NextResponse.json(formattedAgent, { status: 201 });
   } catch (error) {
     console.error('Error in create agent API:', error);
     return NextResponse.json(
@@ -172,7 +166,7 @@ export async function PUT(request: NextRequest) {
     // Adicionar apenas campos fornecidos
     const updateableFields = [
       'name', 'description', 'speciality', 'system_prompt',
-      'greeting', 'suggestions', 'color', 'icon_name',
+      'suggestions', 'color', 'icon_name',
       'active', 'premium_tier', 'category'
     ];
 
@@ -205,11 +199,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Converter e processar o agente atualizado
+    // Converter o agente atualizado
     const formattedAgent = dbAgentToAgent(data);
-    const [agentWithIcon] = processAgentsWithIcons([formattedAgent]);
 
-    return NextResponse.json(agentWithIcon);
+    return NextResponse.json(formattedAgent);
   } catch (error) {
     console.error('Error in update agent API:', error);
     return NextResponse.json(

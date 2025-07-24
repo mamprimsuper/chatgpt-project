@@ -71,12 +71,12 @@
   }
   
   html {
-    font-size: 16px; /* Tamanho padrão web */
+    font-size: 16px;
   }
   
   body {
-    @apply bg-background text-foreground;
-    font-size: 1rem; /* 16px */
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-size: 1rem;
     line-height: 1.5;
   }
   
@@ -95,5 +95,33 @@
   /* Input do chat */
   textarea, input {
     font-size: 1rem;
+    @apply transition-colors duration-300;
+  }
+  
+  /* Scroll suave para toda a aplicação */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  /* Melhorar aparência de seleção de texto */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+  
+  /* Scrollbar personalizada para dark/light theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border/80;
   }
 }

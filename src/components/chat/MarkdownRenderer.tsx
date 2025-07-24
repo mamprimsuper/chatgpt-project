@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 
 interface MarkdownRendererProps {
   content: string;
@@ -13,23 +12,30 @@ export function MarkdownRenderer({ content, isLast }: MarkdownRendererProps) {
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    if (isLast) {
+    if (isLast && content.length > 50) { // Só animar textos longos
       setIsTyping(true);
       setDisplayedContent("");
       
       let index = 0;
+      const increment = Math.max(1, Math.floor(content.length / 100)); // Ajustar velocidade baseado no tamanho
+      
       const typeInterval = setInterval(() => {
         if (index < content.length) {
-          setDisplayedContent(content.slice(0, index + 1));
-          index++;
+          setDisplayedContent(content.slice(0, index + increment));
+          index += increment;
         } else {
+          setDisplayedContent(content); // Garantir conteúdo completo
           setIsTyping(false);
           clearInterval(typeInterval);
         }
-      }, 8);
+      }, 30); // Velocidade mais lenta para evitar piscar
 
-      return () => clearInterval(typeInterval);
+      return () => {
+        clearInterval(typeInterval);
+        setDisplayedContent(content); // Sempre mostrar conteúdo completo ao limpar
+      };
     } else {
+      // Para textos curtos ou não-últimos, mostrar imediatamente
       setDisplayedContent(content);
       setIsTyping(false);
     }
@@ -50,19 +56,14 @@ export function MarkdownRenderer({ content, isLast }: MarkdownRendererProps) {
   };
 
   return (
-    <div className="text-sm text-foreground">
+    <div className="prose prose-neutral dark:prose-invert max-w-none">
       <div 
         dangerouslySetInnerHTML={{ 
-          __html: `<p class="mb-4">${renderContent(displayedContent)}</p>` 
+          __html: renderContent(displayedContent)
         }} 
-        className="[&>p:last-child]:mb-0"
       />
       {isTyping && (
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.6, repeat: Infinity }}
-          className="inline-block w-0.5 h-4 bg-foreground ml-0.5 align-middle"
-        />
+        <span className="inline-block w-2 h-4 bg-foreground ml-1 animate-pulse" />
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { type Dispatch, memo, type SetStateAction, useCallback, useEffect, useState, useRef } from 'react';
+import { type Dispatch, memo, type SetStateAction, useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Agent, UIArtifact } from '@/types';
 import { TextEditor } from '@/artifacts/text/editor';
@@ -25,13 +25,13 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
   const [isEditing, setIsEditing] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = windowWidth ? windowWidth < 768 : false;
-
-  // Simular documento atual
-  const currentDocument: Document = {
+  
+  // Cache para evitar re-cálculos desnecessários
+  const memoizedDocument = useMemo((): Document => ({
     id: artifact.documentId,
     content: artifact.content,
     createdAt: new Date(),
-  };
+  }), [artifact.documentId, artifact.content]);
 
   const handleContentChange = useCallback(
     (updatedContent: string) => {
@@ -62,7 +62,7 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
     [artifact.content, debouncedHandleContentChange, handleContentChange]
   );
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(artifact.content);
       setCopied(true);
@@ -70,9 +70,9 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
     } catch (err) {
       console.error('Failed to copy:', err);
     }
-  };
+  }, [artifact.content]);
 
-  const downloadArtifact = () => {
+  const downloadArtifact = useCallback(() => {
     const blob = new Blob([artifact.content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -82,10 +82,70 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, [artifact.content, artifact.title]);
+
+  // Otimizar animações para evitar piscar
+  const animationConfig = useMemo(() => ({
+    initial: isMobile
+      ? {
+          opacity: 1,
+          x: artifact.boundingBox.left,
+          y: artifact.boundingBox.top,
+          height: artifact.boundingBox.height,
+          width: artifact.boundingBox.width,
+          borderRadius: 24,
+        }
+      : {
+          opacity: 1,
+          x: artifact.boundingBox.left,
+          y: artifact.boundingBox.top,
+          height: artifact.boundingBox.height,
+          width: artifact.boundingBox.width,
+          borderRadius: 8,
+        },
+    animate: isMobile
+      ? {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          height: windowHeight,
+          width: windowWidth || '100dvw',
+          borderRadius: 0,
+          transition: {
+            delay: 0,
+            type: 'spring',
+            stiffness: 200,
+            damping: 30,
+          },
+        }
+      : {
+          opacity: 1,
+          x: 400,
+          y: 0,
+          height: windowHeight,
+          width: windowWidth ? windowWidth - 400 : 'calc(100dvw - 400px)',
+          borderRadius: 0,
+          transition: {
+            delay: 0,
+            type: 'spring',
+            stiffness: 200,
+            damping: 30,
+          },
+        },
+    exit: {
+      opacity: 0,
+      scale: 0.5,
+      transition: {
+        delay: 0.1,
+        type: 'spring',
+        stiffness: 600,
+        damping: 30,
+      },
+    }
+  }), [isMobile, artifact.boundingBox, windowHeight, windowWidth]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {artifact.isVisible && (
         <motion.div
           className="fixed inset-0 z-50 bg-transparent"
@@ -96,98 +156,20 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
           {/* Container do Artefato */}
           <motion.div
             className={`fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-hidden ${isMobile ? '' : 'border-l dark:border-zinc-700 border-zinc-200'}`}
-            initial={
-              isMobile
-                ? {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 24,
-                  }
-                : {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 8,
-                  }
-            }
-            animate={
-              isMobile
-                ? {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                    },
-                  }
-                : {
-                    opacity: 1,
-                    x: 400,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth - 400 : 'calc(100dvw - 400px)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                    },
-                  }
-            }
-            exit={{
-              opacity: 0,
-              scale: 0.5,
-              transition: {
-                delay: 0.1,
-                type: 'spring',
-                stiffness: 600,
-                damping: 30,
-              },
-            }}
+            {...animationConfig}
           >
             {/* Header do Artefato */}
-            <div className="p-2 flex flex-row justify-between items-start border-b border-border">
-              <div className="flex flex-row gap-4 items-start">
-                <Button
-                  onClick={onClose}
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-
-                <div className="flex flex-col">
-                  <div className="font-medium">{artifact.title}</div>
-                  {isContentDirty ? (
-                    <div className="text-sm text-muted-foreground">
-                      Salvando alterações...
-                    </div>
-                  ) : artifact.status === 'streaming' ? (
-                    <div className="text-sm text-muted-foreground">
-                      Gerando conteúdo...
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      {`Atualizado ${formatDistanceToNow(currentDocument.createdAt, {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}`}
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center justify-between p-4 border-b border-border bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold text-foreground truncate">
+                  {artifact.title}
+                </h3>
+                {isContentDirty && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                    Salvando...
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -228,6 +210,15 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
                 >
                   <Download className="w-4 h-4" />
                 </Button>
+
+                <Button
+                  onClick={onClose}
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
             </div>
 
@@ -259,4 +250,13 @@ function PureArtifact({ artifact, agent, onClose, onUpdateContent }: ArtifactPro
   );
 }
 
-export const Artifact = memo(PureArtifact);
+export const Artifact = memo(PureArtifact, (prevProps, nextProps) => {
+  // Otimização: só re-renderizar se propriedades relevantes mudaram
+  return (
+    prevProps.artifact.isVisible === nextProps.artifact.isVisible &&
+    prevProps.artifact.content === nextProps.artifact.content &&
+    prevProps.artifact.title === nextProps.artifact.title &&
+    prevProps.artifact.status === nextProps.artifact.status &&
+    prevProps.agent?.color === nextProps.agent?.color
+  );
+});

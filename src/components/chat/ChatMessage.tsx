@@ -7,6 +7,8 @@ import { User } from "lucide-react";
 import { Message, Agent } from "@/types";
 import { formatMarkdown } from "@/lib/markdown";
 import { ArtifactViewer } from "./ArtifactViewer";
+import React from "react";
+import { BookOpen } from "lucide-react";
 
 interface ChatMessageProps {
   message: Message;
@@ -57,9 +59,15 @@ export function ChatMessage({ message, agent, isLoading = false }: ChatMessagePr
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-          className={`p-2.5 rounded-xl bg-gradient-to-br ${agent.color} text-white flex-shrink-0 shadow-lg`}
+          className={`w-10 h-10 rounded-xl bg-gradient-to-br ${agent.color} text-white flex-shrink-0 shadow-lg flex items-center justify-center`}
         >
-          {agent.icon}
+          {React.isValidElement(agent.icon) ? 
+            React.cloneElement(agent.icon as React.ReactElement, { 
+              className: "w-5 h-5",
+              style: { color: 'white' }
+            }) : 
+            <BookOpen className="w-5 h-5 text-white" />
+          }
         </motion.div>
       )}
       
