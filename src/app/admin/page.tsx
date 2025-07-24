@@ -163,16 +163,16 @@ export default function AdminPage() {
       // Converter status para formato do backend
       const backendData = {
         ...formData,
-        active: formData.status === 'active' ? true : 
-                formData.status === 'inactive' ? false : 
-                'coming_soon',
+        active: formData.status === 'active' ? true : false,
         suggestions: [
           'Como posso começar?',
           'Me dê algumas dicas',
           'O que você pode fazer?',
           'Me ajude com um projeto'
         ],
-        category: 'general',
+        category: formData.status === 'coming_soon' 
+          ? `coming_soon_${formData.category || 'general'}` 
+          : formData.category || 'general',
         premium_tier: 0
       };
       
@@ -203,10 +203,10 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (agentId: string) => {
-    if (!confirm('Tem certeza que deseja deletar este agente?')) return;
+    if (!confirm('⚠️ ATENÇÃO: Esta ação irá APAGAR PERMANENTEMENTE o agente do banco de dados!\n\nEsta ação não pode ser desfeita. Tem certeza que deseja continuar?')) return;
 
     try {
-      const response = await fetch(`/api/agents?id=${agentId}`, {
+      const response = await fetch(`/api/agents?id=${agentId}&permanent=true`, {
         method: 'DELETE',
       });
 
@@ -309,6 +309,15 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="container mx-auto px-6 py-8">
+        {/* Botão sempre visível para criar novo agente */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Gerenciar Agentes</h1>
+          <Button onClick={openCreateForm} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Criar Novo Agente
+          </Button>
+        </div>
+
         {agents.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -316,10 +325,6 @@ export default function AdminPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">Nenhum agente encontrado</h3>
             <p className="text-muted-foreground mb-6">Comece criando seu primeiro agente especializado</p>
-            <Button onClick={openCreateForm} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Criar Primeiro Agente
-            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -12,9 +12,6 @@ This is a Next.js 14 application using the App Router that provides an AI chat i
 # Install dependencies
 npm install
 
-# Start development server (port 3000)
-npm run dev
-
 # Build for production
 npm run build
 
@@ -24,6 +21,8 @@ npm start
 # Run linting
 npm run lint
 ```
+
+**⚠️ IMPORTANT: Do not run `npm run dev` as the development server is already running on localhost:3001**
 
 ## Architecture Overview
 

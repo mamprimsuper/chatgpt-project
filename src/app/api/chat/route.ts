@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Segurança: Impedir chat com agentes "coming soon"
+    if (agent && agent.active === 'coming_soon') {
+      return NextResponse.json(
+        { error: 'This agent is not yet available' },
+        { status: 403 }
+      );
+    }
+
     // Pegar a última mensagem do usuário
     const lastUserMessage = messages
       .filter((msg: any) => msg.role === 'user')

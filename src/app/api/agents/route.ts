@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
-import { dbAgentToAgent } from '@/types';
+import { dbAgentToAgent, isComingSoonAgent } from '@/types';
 import { ICON_MAP } from '@/lib/icons';
 
 // GET - Listar agentes
@@ -8,16 +8,23 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('include_inactive') === 'true';
+    const includeComingSoon = searchParams.get('include_coming_soon') === 'true';
     
     let query = supabase
       .from('agents')
       .select('*')
       .order('created_at', { ascending: true });
     
-    // Por padrão, retorna apenas agentes ativos
+    // Por padrão, retorna apenas agentes ativos + coming soon para usuários finais
     // Para admin, permite buscar todos incluindo inativos
     if (!includeInactive) {
-      query = query.eq('active', true);
+      if (includeComingSoon) {
+        // Inclui ativos + coming soon
+        query = query.or('active.eq.true,category.like.coming_soon_%');
+      } else {
+        // Apenas ativos (sem coming soon)
+        query = query.eq('active', true).not('category', 'like', 'coming_soon_%');
+      }
     }
     
     const { data: agents, error } = await query;
@@ -212,11 +219,12 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Desativar agente (soft delete)
+// DELETE - Desativar agente (soft delete) ou apagar permanentemente (hard delete)
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const permanent = searchParams.get('permanent') === 'true';
     
     if (!id) {
       return NextResponse.json(
@@ -225,36 +233,66 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Soft delete - apenas desativa o agente
-    const { data, error } = await supabase
-      .from('agents')
-      .update({ 
-        active: false,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    if (permanent) {
+      // Hard delete - apaga permanentemente do banco
+      const { data, error } = await supabase
+        .from('agents')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error deleting agent:', error);
-      return NextResponse.json(
-        { error: 'Failed to delete agent', details: error.message },
-        { status: 500 }
-      );
+      if (error) {
+        console.error('Error permanently deleting agent:', error);
+        return NextResponse.json(
+          { error: 'Failed to permanently delete agent', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      if (!data) {
+        return NextResponse.json(
+          { error: 'Agent not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ 
+        message: 'Agent permanently deleted successfully',
+        agent: data 
+      });
+    } else {
+      // Soft delete - apenas desativa o agente
+      const { data, error } = await supabase
+        .from('agents')
+        .update({ 
+          active: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error deactivating agent:', error);
+        return NextResponse.json(
+          { error: 'Failed to deactivate agent', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      if (!data) {
+        return NextResponse.json(
+          { error: 'Agent not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ 
+        message: 'Agent deactivated successfully',
+        agent: data 
+      });
     }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Agent not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ 
-      message: 'Agent deactivated successfully',
-      agent: data 
-    });
   } catch (error) {
     console.error('Error in delete agent API:', error);
     return NextResponse.json(

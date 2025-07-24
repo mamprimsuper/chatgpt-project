@@ -8,7 +8,7 @@ interface UseAgentsResult {
   refetch: () => void;
 }
 
-export function useAgents(includeInactive: boolean = false): UseAgentsResult {
+export function useAgents(includeInactive: boolean = false, includeComingSoon: boolean = true): UseAgentsResult {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +18,19 @@ export function useAgents(includeInactive: boolean = false): UseAgentsResult {
       setLoading(true);
       setError(null);
 
-      const url = includeInactive 
-        ? '/api/agents?include_inactive=true' 
-        : '/api/agents';
+      let url = '/api/agents';
+      const params = new URLSearchParams();
+      
+      if (includeInactive) {
+        params.append('include_inactive', 'true');
+      }
+      if (includeComingSoon) {
+        params.append('include_coming_soon', 'true');
+      }
+      
+      if (params.toString()) {
+        url += '?' + params.toString();
+      }
       
       const response = await fetch(url);
       
@@ -42,7 +52,7 @@ export function useAgents(includeInactive: boolean = false): UseAgentsResult {
     } finally {
       setLoading(false);
     }
-  }, [includeInactive]);
+  }, [includeInactive, includeComingSoon]);
 
   useEffect(() => {
     fetchAgents();

@@ -70,11 +70,18 @@ export interface Document {
   updatedAt?: Date;
 }
 
+// Helper function para detectar se um agente está em "coming soon"
+export function isComingSoonAgent(category?: string): boolean {
+  return category?.startsWith('coming_soon_') || false;
+}
+
 // Utility function para converter DbAgent para Agent
 export function dbAgentToAgent(dbAgent: DbAgent): Agent {
   const suggestions = Array.isArray(dbAgent.suggestions) 
     ? dbAgent.suggestions as string[]
     : [];
+
+  const isComingSoon = isComingSoonAgent(dbAgent.category);
 
   return {
     id: dbAgent.id,
@@ -87,7 +94,7 @@ export function dbAgentToAgent(dbAgent: DbAgent): Agent {
     systemPrompt: dbAgent.system_prompt,
     category: dbAgent.category,
     premiumTier: dbAgent.premium_tier,
-    active: dbAgent.active,
+    active: isComingSoon ? 'coming_soon' : dbAgent.active,
     iconName: dbAgent.icon_name,
   };
 }

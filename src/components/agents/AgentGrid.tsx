@@ -13,19 +13,26 @@ interface AgentCardProps {
 }
 
 function AgentCard({ agent, index, onSelect }: AgentCardProps) {
+  const isComingSoon = agent.active === 'coming_soon';
+  
   return (
     <motion.button
-      onClick={() => onSelect(agent)}
-      className="group relative p-5 rounded-xl border border-border hover:border-border/70 bg-card hover:bg-accent/50 transition-all duration-300 text-left overflow-hidden aspect-[4/3] backdrop-blur-sm shadow-sm hover:shadow-md"
-      whileHover={{ 
+      onClick={() => !isComingSoon && onSelect(agent)}
+      disabled={isComingSoon}
+      className={`group relative p-5 rounded-xl border border-border transition-all duration-300 text-left overflow-hidden aspect-[4/3] backdrop-blur-sm shadow-sm ${
+        isComingSoon 
+          ? 'opacity-60 cursor-not-allowed bg-card/50' 
+          : 'hover:border-border/70 bg-card hover:bg-accent/50 hover:shadow-md cursor-pointer'
+      }`}
+      whileHover={!isComingSoon ? { 
         scale: 1.02, 
         y: -4,
         rotateX: 5,
         rotateY: 5
-      }}
-      whileTap={{ scale: 0.98 }}
+      } : {}}
+      whileTap={!isComingSoon ? { scale: 0.98 } : {}}
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: isComingSoon ? 0.6 : 1, y: 0 }}
       transition={{ 
         delay: index * 0.05,
         duration: 0.4,
@@ -33,11 +40,20 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
       }}
       style={{ perspective: "1000px" }}
     >
+      {/* Coming Soon Overlay */}
+      {isComingSoon && (
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20 rounded-xl flex items-center justify-center z-20">
+          <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            Em Breve
+          </div>
+        </div>
+      )}
+
       {/* Glow effect */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 transition-opacity duration-500 blur-xl`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 ${!isComingSoon && 'group-hover:opacity-10 dark:group-hover:opacity-20'} transition-opacity duration-500 blur-xl`} />
       
       {/* Border glow */}
-      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 transition-opacity duration-300`} 
+      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${agent.color} opacity-0 ${!isComingSoon && 'group-hover:opacity-20 dark:group-hover:opacity-30'} transition-opacity duration-300`} 
            style={{ padding: '1px', background: 'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
       
       <div className="relative z-10 h-full flex flex-col">
@@ -83,45 +99,55 @@ function AgentCard({ agent, index, onSelect }: AgentCardProps) {
         </motion.p>
 
         <motion.div 
-          className="flex items-center text-muted-foreground group-hover:text-foreground transition-colors mt-3"
+          className={`flex items-center transition-colors mt-3 ${
+            isComingSoon 
+              ? 'text-orange-500/70' 
+              : 'text-muted-foreground group-hover:text-foreground'
+          }`}
           initial={{ x: 0 }}
-          whileHover={{ x: 3 }}
+          whileHover={!isComingSoon ? { x: 3 } : {}}
         >
-          <span className="text-xs font-medium">Conversar</span>
-          <motion.div
-            className="ml-2"
-            animate={{ x: [0, 3, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-          >
-            →
-          </motion.div>
+          <span className="text-xs font-medium">
+            {isComingSoon ? 'Em breve disponível' : 'Conversar'}
+          </span>
+          {!isComingSoon && (
+            <motion.div
+              className="ml-2"
+              animate={{ x: [0, 3, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            >
+              →
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
       {/* Subtle particles effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-foreground/50 rounded-full"
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${30 + Math.sin(i) * 20}%`,
-            }}
-            animate={{
-              y: [-10, -20, -10],
-              opacity: [0, 1, 0],
-              scale: [0, 1, 0]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              delay: i * 0.2,
-              ease: "easeInOut"
-            }}
-          />
-        ))}
-      </div>
+      {!isComingSoon && (
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-foreground/50 rounded-full"
+              style={{
+                left: `${20 + i * 15}%`,
+                top: `${30 + Math.sin(i) * 20}%`,
+              }}
+              animate={{
+                y: [-10, -20, -10],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.2,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </div>  
+      )}
     </motion.button>
   );
 }

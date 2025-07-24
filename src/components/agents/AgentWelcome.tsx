@@ -17,6 +17,25 @@ interface AgentWelcomeProps {
 export function AgentWelcome({ agent, onBack, onStartChat }: AgentWelcomeProps) {
   const [input, setInput] = useState("");
 
+  // Segurança: Impedir acesso a agentes "coming soon"
+  if (agent.active === 'coming_soon') {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-8">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Agente em Breve</h2>
+          <p className="text-muted-foreground mb-6">Este agente ainda não está disponível.</p>
+          <Button onClick={onBack} variant="default">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar aos Agentes
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const handleSuggestionClick = (suggestion: string) => {
     onStartChat(suggestion);
   };
