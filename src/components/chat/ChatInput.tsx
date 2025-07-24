@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { Agent } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 interface ChatInputProps {
   value: string;
@@ -29,6 +31,9 @@ export function ChatInput({
   className
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -48,17 +53,26 @@ export function ChatInput({
     adjustHeight();
   };
 
+  const handleSend = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    onSend();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       if (!isLoading && !disabled && value.trim()) {
-        onSend();
+        handleSend();
       }
     }
   };
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <>
+      <div className={cn("relative w-full", className)}>
       <Textarea
         ref={textareaRef}
         value={value}
@@ -98,7 +112,7 @@ export function ChatInput({
           </Button>
         ) : (
           <Button
-            onClick={onSend}
+            onClick={handleSend}
             disabled={!value.trim() || disabled}
             size="icon"
             className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
@@ -108,5 +122,19 @@ export function ChatInput({
         )}
       </div>
     </div>
+      
+      <AuthModal 
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="signup"
+        onSuccess={() => {
+          setShowAuthModal(false);
+          // Aguardar um pouco para o contexto de auth ser atualizado e então enviar
+          setTimeout(() => {
+            onSend();
+          }, 100);
+        }}
+      />
+    </>
   );
 }

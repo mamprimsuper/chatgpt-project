@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Menu } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { supabase } from "@/lib/supabase/client";
 
 // Components
 import { MessageItem } from "@/components/chat/MessageItem";
@@ -45,8 +48,13 @@ export default function ChatPage() {
   const [messageCount, setMessageCount] = useState(0);
   const [isNewConversation, setIsNewConversation] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string | undefined>(undefined);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  // Auth context
+  const { user } = useAuth();
 
   // Hooks do Supabase
   const { chats, refresh: refreshChats } = useChats();
@@ -83,10 +91,18 @@ export default function ChatPage() {
   const handleStartChat = async (initialMessage?: string) => {
     if (!selectedAgent) return;
     
+    // Verificar se usuário está autenticado
+    if (!user) {
+      setPendingMessage(initialMessage);
+      setShowAuthModal(true);
+      return;
+    }
+    
     // Criar novo chat no banco
     const chatId = await createChat(selectedAgent);
     if (!chatId) {
-      console.error('Failed to create chat');
+      console.error('Failed to create chat - user might not be authenticated');
+      setShowAuthModal(true);
       return;
     }
 
@@ -127,6 +143,14 @@ export default function ChatPage() {
     setIsLoading(true);
     
     try {
+      // Obter token JWT da sessão do Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
       // Preparar mensagens para a API
       const apiMessages = currentMessages
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -144,11 +168,12 @@ export default function ChatPage() {
         });
       }
 
-      // Chamar API
+      // Chamar API com Bearer token authentication
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Token JWT no header
         },
         body: JSON.stringify({
           messages: apiMessages,
@@ -432,6 +457,7 @@ export default function ChatPage() {
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
+        onOpenAuthModal={() => setShowAuthModal(true)}
       />
 
       {/* Botão para mostrar sidebar quando minimizada */}
@@ -588,6 +614,24 @@ export default function ChatPage() {
           onUpdateContent={handleUpdateArtifactContent}
         />
       </div>
+
+      {/* Modal de autenticação */}
+      <AuthModal 
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="signup"
+        onSuccess={() => {
+          setShowAuthModal(false);
+          // Continuar com o chat após autenticação
+          if (selectedAgent) {
+            setTimeout(() => {
+              handleStartChat(pendingMessage);
+              setPendingMessage(undefined);
+            }, 100);
+          }
+        }}
+      />
+
     </div>
   );
 }

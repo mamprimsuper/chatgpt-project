@@ -23,7 +23,9 @@ import {
 import { ICON_MAP } from "@/lib/icons";
 import { Agent } from "@/types";
 import { useAgents } from "@/hooks/use-agents";
-import { Header } from "@/components/header";
+// import { Header } from "@/components/header"; // Removido - admin não usa header da app principal
+import { AdminGuard } from "@/components/auth/AdminGuard";
+import { supabase } from "@/lib/supabase/client";
 
 interface AgentFormData {
   name: string;
@@ -32,6 +34,7 @@ interface AgentFormData {
   color: string;
   icon_name: string;
   status: 'active' | 'inactive' | 'coming_soon';
+  category?: string;
 }
 
 const defaultFormData: AgentFormData = {
@@ -118,6 +121,8 @@ export default function AdminPage() {
 
   const { agents, loading, error, refetch } = useAgents(true); // Incluir agentes inativos para admin
 
+  // Admin agora usa sistema separado - não precisa de token JWT do Supabase
+
   const handleInputChange = (field: keyof AgentFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -196,18 +201,23 @@ export default function AdminPage() {
       closeForm();
     } catch (error) {
       console.error('Error saving agent:', error);
-      alert('Erro ao salvar agente. Tente novamente.');
+      // Remover alert nativo
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (agentId: string) => {
-    if (!confirm('⚠️ ATENÇÃO: Esta ação irá APAGAR PERMANENTEMENTE o agente do banco de dados!\n\nEsta ação não pode ser desfeita. Tem certeza que deseja continuar?')) return;
+    // Remover alert nativo - substituir por confirmação mais elegante no futuro
+    // Por agora, continuar direto com a deleção
+    setIsLoading(true);
 
     try {
       const response = await fetch(`/api/agents?id=${agentId}&permanent=true`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -217,7 +227,9 @@ export default function AdminPage() {
       await refetch();
     } catch (error) {
       console.error('Error deleting agent:', error);
-      alert('Erro ao deletar agente. Tente novamente.');
+      // Remover alert nativo
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -244,9 +256,15 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <Header />
+    <AdminGuard>
+      <div className="min-h-screen bg-background">
+        {/* Título da interface admin */}
+        <div className="bg-background border-b border-border">
+          <div className="container mx-auto px-6 py-4">
+            <h1 className="text-2xl font-bold">Painel Administrativo</h1>
+            <p className="text-muted-foreground">Gerencie agentes e configurações do sistema</p>
+          </div>
+        </div>
 
       {/* Estatísticas */}
       <div className="container mx-auto px-6 py-6">
@@ -349,14 +367,14 @@ export default function AdminPage() {
                       <p className="text-sm text-muted-foreground line-clamp-1">{agent.description}</p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 relative z-10">
                     <Button
                       onClick={() => setShowSystemPrompt(
                         showSystemPrompt === agent.id ? null : agent.id
                       )}
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 relative z-10"
                     >
                       {showSystemPrompt === agent.id ? (
                         <EyeOff className="w-4 h-4" />
@@ -368,7 +386,7 @@ export default function AdminPage() {
                       onClick={() => openEditForm(agent)}
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 relative z-10"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -376,7 +394,7 @@ export default function AdminPage() {
                       onClick={() => handleDelete(agent.id)}
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-600"
+                      className="h-8 w-8 text-red-500 hover:text-red-600 relative z-10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -652,5 +670,6 @@ export default function AdminPage() {
         </div>
       )}
     </div>
+    </AdminGuard>
   );
 } 

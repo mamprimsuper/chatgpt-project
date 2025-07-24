@@ -108,14 +108,6 @@ export function shouldCreateArtifact(
   if (responseContent) {
     const isStructured = isStructuredContent(responseContent);
     
-    // Log para debug
-    if (!isStructured) {
-      console.log('Conteúdo não passou nos critérios de estrutura:', {
-        length: responseContent.length,
-        words: responseContent.split(/\s+/).length,
-        paragraphs: responseContent.split(/\n\n+/).length
-      });
-    }
     
     return isStructured;
   }

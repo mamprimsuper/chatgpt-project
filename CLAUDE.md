@@ -66,6 +66,19 @@ OPENROUTER_API_KEY=
 OPENROUTER_MODEL=
 ```
 
+### Admin Access
+
+**IMPORTANTE: Sistema Admin Separado**
+- O sistema admin é **completamente independente** do sistema de usuários da aplicação
+- Admin **NÃO** usa Supabase Auth
+- Usuários normais **NÃO** podem acessar `/admin`
+
+**Admin Credentials (hardcoded):**
+- Email: `admin@usecreatorhub.com`
+- Password: `admincreatorhub102030`
+
+O admin acessa `/admin` diretamente e faz login com credenciais hardcoded. A autenticação é salva no localStorage e é completamente separada do sistema de usuários normais.
+
 ### Database Schema
 
 The Supabase database includes:

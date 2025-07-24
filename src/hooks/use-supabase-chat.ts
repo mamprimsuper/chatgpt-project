@@ -1,20 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { DbChat, DbMessage } from '@/lib/supabase/types';
 import { Chat, Message, Agent } from '@/types';
 import { getUserSession } from '@/lib/session';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Hook para listar chats do usuário
 export function useChats() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const loadChats = async () => {
+  const loadChats = useCallback(async () => {
     try {
       const userSession = getUserSession();
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('chats')
         .select(`
           *,
@@ -24,8 +26,17 @@ export function useChats() {
             created_at
           )
         `)
-        .eq('user_session', userSession)
         .order('updated_at', { ascending: false });
+
+      // Se usuário autenticado, buscar por user_id
+      // Senão, usar user_session (compatibilidade com chats anônimos)
+      if (user) {
+        query = query.eq('user_id', user.id);
+      } else {
+        query = query.eq('user_session', userSession);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -51,11 +62,11 @@ export function useChats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadChats();
-  }, []);
+  }, [user, loadChats]); // Recarregar quando user mudar (login/logout)
 
   return { chats, loading, error, refresh: loadChats };
 }
@@ -111,7 +122,14 @@ export function useMessages(chatId: string | null) {
 // Função para criar um novo chat
 export async function createChat(agent: Agent): Promise<string | null> {
   try {
-    const userSession = getUserSession();
+    // Verificar se usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Agora exigimos autenticação para criar chats
+    if (!user) {
+      console.error('User must be authenticated to create chats');
+      return null;
+    }
     
     // Gerar título baseado no agente
     const title = `Chat com ${agent.name}`;
@@ -121,7 +139,7 @@ export async function createChat(agent: Agent): Promise<string | null> {
       .insert({
         agent_id: agent.id,
         title,
-        user_session: userSession,
+        user_id: user.id,
       })
       .select()
       .single();

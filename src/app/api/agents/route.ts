@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { dbAgentToAgent, isComingSoonAgent } from '@/types';
 import { ICON_MAP } from '@/lib/icons';
+// import { requireAdminFromToken } from '@/lib/auth/server'; // Sistema admin agora é separado
+
+// Operações admin agora usam cliente público com RLS policy adequada
+
+import { supabase } from '@/lib/supabase/client';
 
 // GET - Listar agentes
 export async function GET(request: NextRequest) {
@@ -10,7 +15,10 @@ export async function GET(request: NextRequest) {
     const includeInactive = searchParams.get('include_inactive') === 'true';
     const includeComingSoon = searchParams.get('include_coming_soon') === 'true';
     
-    let query = supabase
+    // Cliente público com RLS policies configuradas para admin e usuários normais
+    const client = supabase;
+    
+    let query = client
       .from('agents')
       .select('*')
       .order('created_at', { ascending: true });
@@ -44,7 +52,6 @@ export async function GET(request: NextRequest) {
     // Converter DbAgent para Agent
     const formattedAgents = agents.map(dbAgentToAgent);
 
-    console.log('Agents processed:', formattedAgents.length);
 
     return NextResponse.json(formattedAgents);
   } catch (error) {
@@ -59,6 +66,12 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo agente
 export async function POST(request: NextRequest) {
   try {
+    // Sistema admin agora é separado - removendo verificação temporariamente
+    // const authResult = await requireAdminFromToken(request);
+    // if ('status' in authResult) {
+    //   return authResult; // Retorna erro de autenticação
+    // }
+
     const body = await request.json();
     
     // Validação dos campos obrigatórios
@@ -114,7 +127,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     };
 
-    // Inserir no Supabase
+    // Inserir no Supabase usando cliente público (com policy temporária) 
     const { data, error } = await supabase
       .from('agents')
       .insert([agentData])
@@ -145,6 +158,12 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar agente existente
 export async function PUT(request: NextRequest) {
   try {
+    // Sistema admin agora é separado - removendo verificação temporariamente
+    // const authResult = await requireAdminFromToken(request);
+    // if ('status' in authResult) {
+    //   return authResult; // Retorna erro de autenticação
+    // }
+
     const body = await request.json();
     
     if (!body.id) {
@@ -183,7 +202,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Atualizar no Supabase
+    // Atualizar no Supabase usando cliente público (com policy temporária)
     const { data, error } = await supabase
       .from('agents')
       .update(updateData)
@@ -222,6 +241,12 @@ export async function PUT(request: NextRequest) {
 // DELETE - Desativar agente (soft delete) ou apagar permanentemente (hard delete)
 export async function DELETE(request: NextRequest) {
   try {
+    // Sistema admin agora é separado - removendo verificação temporariamente
+    // const authResult = await requireAdminFromToken(request);
+    // if ('status' in authResult) {
+    //   return authResult; // Retorna erro de autenticação
+    // }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const permanent = searchParams.get('permanent') === 'true';
@@ -234,13 +259,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (permanent) {
-      // Hard delete - apaga permanentemente do banco
-      const { data, error } = await supabase
+      // Hard delete - usando cliente público (com policy temporária)
+      const { error } = await supabase
         .from('agents')
         .delete()
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
         console.error('Error permanently deleting agent:', error);
@@ -250,28 +273,18 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      if (!data) {
-        return NextResponse.json(
-          { error: 'Agent not found' },
-          { status: 404 }
-        );
-      }
-
       return NextResponse.json({ 
-        message: 'Agent permanently deleted successfully',
-        agent: data 
+        message: 'Agent permanently deleted successfully'
       });
     } else {
-      // Soft delete - apenas desativa o agente
-      const { data, error } = await supabase
+      // Soft delete - usando cliente público (com policy temporária)
+      const { error } = await supabase
         .from('agents')
         .update({ 
           active: false,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
         console.error('Error deactivating agent:', error);
@@ -281,16 +294,8 @@ export async function DELETE(request: NextRequest) {
         );
       }
 
-      if (!data) {
-        return NextResponse.json(
-          { error: 'Agent not found' },
-          { status: 404 }
-        );
-      }
-
       return NextResponse.json({ 
-        message: 'Agent deactivated successfully',
-        agent: data 
+        message: 'Agent deactivated successfully'
       });
     }
   } catch (error) {

@@ -11,8 +11,10 @@ import { Agent } from '@/types';
 import { createDocumentTool, executeCreateDocument } from '@/lib/ai/tools/create-document';
 import { getAgentSystemPrompt } from '@/lib/ai/prompts';
 import type { ToolCall } from '@/lib/ai/types';
+import { requireAuthFromToken } from '@/lib/auth/server';
 
-export const runtime = 'edge';
+// Removido edge runtime para corrigir problemas de autenticação
+// export const runtime = 'edge';
 
 // Função para verificar se um agente pode usar tools baseado em suas características
 function canAgentUseTools(agent: Agent | null): boolean {
@@ -59,6 +61,13 @@ function canAgentUseTools(agent: Agent | null): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Exigir autenticação obrigatória via Bearer token
+    const authResult = await requireAuthFromToken(request);
+    if ('status' in authResult) {
+      return authResult; // Retorna erro de autenticação
+    }
+    const { user } = authResult;
+
     const body = await request.json();
     const { messages, agent, stream = false } = body;
 
@@ -92,14 +101,6 @@ export async function POST(request: NextRequest) {
     const canUseTools = canAgentUseTools(agent);
     const tools = canUseTools ? [createDocumentTool] : undefined;
 
-    // Log inicial para debug
-    console.log('=== TOOLS DEBUG ===', {
-      agentName: agent?.name,
-      agentCategory: agent?.category,
-      agentSpeciality: agent?.speciality,
-      canUseTools,
-      lastUserMessage: lastUserMessage.substring(0, 100) + '...'
-    });
 
     // Adicionar system prompt
     const systemPrompt = agent ? getAgentSystemPrompt(agent, canUseTools) : undefined;
@@ -123,13 +124,6 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    // Log da resposta da API
-    console.log('=== API RESPONSE ===', {
-      hasChoices: !!data.choices,
-      hasToolCalls: !!data.choices?.[0]?.message?.tool_calls,
-      toolCallsCount: data.choices?.[0]?.message?.tool_calls?.length || 0,
-      messageLength: data.choices?.[0]?.message?.content?.length || 0
-    });
     
     // Verificar se a IA chamou alguma tool
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
@@ -137,10 +131,6 @@ export async function POST(request: NextRequest) {
     
     if (toolCalls && toolCalls.length > 0) {
       usedTools = true;
-      console.log('=== TOOL CALLED ===', {
-        toolName: toolCalls[0].function.name,
-        arguments: toolCalls[0].function.arguments
-      });
       
       // Processar tool calls
       const toolCall = toolCalls[0] as ToolCall;
@@ -178,13 +168,6 @@ export async function POST(request: NextRequest) {
         const contentData = await contentResponse.json();
         const fullContent = contentData.choices?.[0]?.message?.content || '';
         
-        // Log para debug
-        console.log('=== TOOL SUCCESS ===', {
-          title: args.title,
-          contentLength: fullContent.length,
-          agent: agent?.name
-        });
-        
         // Retornar com artefato via tool - SISTEMA NOVO
         return NextResponse.json({
           content: `Criei o documento "${args.title}" para você. O conteúdo está disponível para visualização e edição.`,
@@ -213,12 +196,10 @@ export async function POST(request: NextRequest) {
     }
     
     // Sistema antigo - APENAS se não usou tools
-    console.log('=== FALLBACK TO OLD SYSTEM ===');
     const fullContent = data.choices?.[0]?.message?.content || '';
 
     // Para agentes habilitados para tools, não usar sistema antigo
     if (canUseTools) {
-      console.log('=== TOOL-ENABLED AGENT, NO OLD SYSTEM ===');
       return NextResponse.json({
         content: fullContent,
         artifact: null,
@@ -247,10 +228,6 @@ export async function POST(request: NextRequest) {
         };
         finalContent = messageContent;
         
-        console.log('=== OLD SYSTEM ARTIFACT ===', {
-          title: artifact.title,
-          contentLength: artifactContent.length
-        });
       }
     }
 

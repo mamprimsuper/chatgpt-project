@@ -12,11 +12,15 @@ import {
   Clock,
   Search,
   BookOpen,
-  Trash2
+  Trash2,
+  LogOut,
+  Crown,
+  ChevronUp
 } from "lucide-react";
 import { Agent, Chat } from "@/types";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ThemeSelector } from "@/components/theme-selector";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   isVisible: boolean;
@@ -27,6 +31,7 @@ interface SidebarProps {
   onNewChat: () => void;
   onSelectChat: (chatId: string) => void;
   onDeleteChat?: (chatId: string) => void;
+  onOpenAuthModal?: () => void;
 }
 
 export function Sidebar({ 
@@ -37,16 +42,37 @@ export function Sidebar({
   onToggle, 
   onNewChat, 
   onSelectChat,
-  onDeleteChat 
+  onDeleteChat,
+  onOpenAuthModal 
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const { user, signOut } = useAuth();
 
   // Filtrar chats baseado na busca
   const filteredChats = chats.filter(chat => 
     chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fechar menu quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
 
   const handleDeleteClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation(); // Prevenir seleção do chat
@@ -55,6 +81,11 @@ export function Sidebar({
         onDeleteChat(chatId);
       }
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setShowUserMenu(false);
   };
 
   return (
@@ -244,13 +275,84 @@ export function Sidebar({
           <motion.div 
             className="p-4 border-t border-sidebar-border space-y-3"
           >
-            {/* User Info */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                <User className="w-3 h-3" />
+            {/* User Menu */}
+            {user ? (
+              <div className="relative" ref={userMenuRef}>
+                <motion.button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-sidebar-accent transition-colors group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-medium text-sm">
+                      {user.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-medium truncate max-w-[120px]">
+                        {user.email?.split('@')[0] || 'Usuário'}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Crown className="w-3 h-3" />
+                        Plano Free
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronUp 
+                    className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+                      showUserMenu ? 'rotate-0' : 'rotate-180'
+                    }`} 
+                  />
+                </motion.button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute bottom-full left-0 right-0 mb-2 bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
+                    >
+                      <div className="p-3 border-b border-border">
+                        <div className="text-sm font-medium">{user.email}</div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <Crown className="w-3 h-3" />
+                          Plano Free - Ilimitado
+                        </div>
+                      </div>
+                      
+                      <div className="p-1">
+                        <motion.button
+                          onClick={handleSignOut}
+                          className="flex items-center gap-2 w-full p-2 text-sm rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                          whileHover={{ x: 2 }}
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sair da conta
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <span className="font-medium">Usuário</span>
-            </div>
+            ) : (
+              <motion.button
+                onClick={() => onOpenAuthModal?.()}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-sidebar-accent w-full text-left"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                  <User className="w-3 h-3" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">Fazer login</span>
+                  <span className="text-xs opacity-70">Clique para entrar</span>
+                </div>
+              </motion.button>
+            )}
             
             {/* Theme Selector */}
             <ThemeSelector />
